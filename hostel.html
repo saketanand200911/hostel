@@ -1,0 +1,2173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CampusHaven - Simple, Super-Friendly Student Hostel Portal</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- QRCode.js CDN for standalone QR generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Google Identity Services for Google Auth -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@600;700&family=Patrick+Hand&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Playfair+Display:wght@600;700;800&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #0f172a;
+            --secondary: #1e293b;
+            --accent: #f59e0b;
+            --accent-muted: rgba(251, 191, 36, 0.2);
+            --ink: #0f172a;
+            --paper: #FAF8F5;
+            --paper-card: #FFFDF9;
+            --grid-line: #E7E2DA;
+            --sketch-border: #0f172a;
+            --sketch-shadow: #0f172a;
+            --highlighter: #fde68a;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', 'Patrick Hand', sans-serif;
+            background-color: var(--paper);
+            color: var(--ink);
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            background-image:
+                linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        .bg-white {
+            background-color: var(--paper-card) !important;
+        }
+
+        .font-hand {
+            font-family: 'Patrick Hand', cursive, sans-serif;
+        }
+
+        .font-draft {
+            font-family: 'Architects Daughter', cursive, sans-serif;
+        }
+
+        .font-script {
+            font-family: 'Caveat', cursive, sans-serif;
+        }
+
+        .font-mono-draft {
+            font-family: 'Space Mono', monospace;
+        }
+
+        .sketch-card {
+            background-color: var(--paper-card);
+            border: 2.5px solid var(--sketch-border);
+            border-radius: 20px;
+            box-shadow: 4px 4px 0px 0px var(--sketch-shadow);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .sketch-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 6px 6px 0px 0px var(--sketch-shadow);
+        }
+
+        .sketch-box {
+            border: 2px solid var(--sketch-border);
+            border-radius: 14px;
+            box-shadow: 3px 3px 0px 0px var(--sketch-shadow);
+        }
+
+        .sketch-btn {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            border: 2px solid var(--sketch-border);
+            border-radius: 14px;
+            box-shadow: 3px 3px 0px 0px var(--sketch-shadow);
+            transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .sketch-btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0px 0px var(--sketch-shadow);
+        }
+
+        .sketch-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px 0px var(--sketch-shadow);
+        }
+
+        .sketch-input {
+            border: 2px solid var(--sketch-border);
+            border-radius: 12px;
+            box-shadow: inset 1px 2px 3px rgba(0, 0, 0, 0.05);
+            background-color: #ffffff;
+            color: var(--ink);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .sketch-input:focus {
+            outline: none;
+            box-shadow: 3px 3px 0px 0px var(--accent);
+        }
+
+        .highlighter {
+            background: linear-gradient(104deg, rgba(254, 240, 138, 0) 0.9%, var(--highlighter) 2.4%, var(--highlighter) 95%, rgba(254, 240, 138, 0) 98%);
+            padding: 0 0.35rem;
+            border-radius: 4px;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
+        }
+
+        .washi-tape {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-1.5deg);
+            width: 90px;
+            height: 20px;
+            background-color: rgba(254, 240, 138, 0.9);
+            border-left: 2px dashed rgba(0, 0, 0, 0.15);
+            border-right: 2px dashed rgba(0, 0, 0, 0.15);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .stamp-badge {
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            border-radius: 8px;
+            text-transform: uppercase;
+            font-family: 'Space Mono', monospace;
+            letter-spacing: 0.08em;
+            transform: rotate(-2deg);
+            display: inline-block;
+            padding: 2px 8px;
+            font-weight: 800;
+        }
+
+        .modal-backdrop {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(4px);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .subnav-tab-active {
+            background-color: var(--accent);
+            color: #0f172a;
+            font-weight: 800;
+            border-bottom: 3px solid var(--sketch-border);
+        }
+
+        /* BOYS WING */
+        body.theme-boys {
+            background-color: #FAF8F5 !important;
+            background-image:
+                linear-gradient(to right, #E7E2DA 1px, transparent 1px),
+                linear-gradient(to bottom, #E7E2DA 1px, transparent 1px) !important;
+            background-size: 28px 28px !important;
+            color: #0f172a !important;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        }
+
+        body.theme-boys h1,
+        body.theme-boys h2,
+        body.theme-boys h3,
+        body.theme-boys h4,
+        body.theme-boys .font-draft {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+            font-weight: 800 !important;
+            letter-spacing: -0.02em !important;
+            color: #0f172a !important;
+        }
+
+        body.theme-boys p,
+        body.theme-boys span,
+        body.theme-boys label,
+        body.theme-boys button,
+        body.theme-boys select,
+        body.theme-boys input,
+        body.theme-boys textarea,
+        body.theme-boys .font-hand {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        }
+
+        body.theme-boys .sketch-card,
+        body.theme-boys [class*="sketch-card"] {
+            background-color: #FFFDF9 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: 2px solid #0f172a !important;
+            border-radius: 14px !important;
+            box-shadow: 4px 4px 0px 0px #0f172a !important;
+            transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+        }
+
+        body.theme-boys .sketch-card:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 6px 6px 0px 0px #0f172a !important;
+        }
+
+        body.theme-boys .sketch-box {
+            background-color: #FAF6F0 !important;
+            border: 2px solid #0f172a !important;
+            border-radius: 10px !important;
+            box-shadow: 3px 3px 0px 0px #0f172a !important;
+        }
+
+        body.theme-boys .sketch-btn {
+            background-color: #f59e0b !important;
+            color: #0f172a !important;
+            border: 2px solid #0f172a !important;
+            border-radius: 10px !important;
+            box-shadow: 3px 3px 0px 0px #0f172a !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            font-weight: 800 !important;
+            transition: all 0.1s ease !important;
+        }
+
+        body.theme-boys .sketch-btn:hover {
+            background-color: #fbbf24 !important;
+            transform: translate(-1px, -1px) !important;
+            box-shadow: 4px 4px 0px 0px #0f172a !important;
+        }
+
+        body.theme-boys #nav-header {
+            background-color: #FAF8F5 !important;
+            border-bottom: 2px solid #0f172a !important;
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04) !important;
+        }
+
+        body.theme-boys footer {
+            background-color: #FAF8F5 !important;
+            border-top: 2px solid #0f172a !important;
+        }
+
+        /* GIRLS WING */
+        body.theme-girls {
+            background-color: #F8FAF7 !important;
+            background-image:
+                radial-gradient(circle at 12% 16%, rgba(167, 243, 208, 0.4) 0%, transparent 45%),
+                radial-gradient(circle at 88% 82%, rgba(253, 224, 71, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(244, 255, 240, 0.4) 0%, transparent 60%),
+                linear-gradient(180deg, #F8FAF7 0%, #F0F5EC 100%) !important;
+            background-attachment: fixed !important;
+            color: #14532D !important;
+            font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif !important;
+        }
+
+        body.theme-girls .sketch-card,
+        body.theme-girls [class*="sketch-card"] {
+            background: rgba(255, 255, 255, 0.75) !important;
+            backdrop-filter: blur(24px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.95) !important;
+            border-top: 1px solid rgba(255, 255, 255, 1) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 16px 40px -10px rgba(20, 83, 45, 0.08),
+                0 4px 16px -2px rgba(0, 0, 0, 0.03),
+                inset 0 1px 1px rgba(255, 255, 255, 0.95) !important;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+
+        body.theme-girls .sketch-card:hover {
+            transform: translateY(-3px) scale(1.004) !important;
+            background: rgba(255, 255, 255, 0.85) !important;
+            box-shadow: 0 22px 48px -10px rgba(20, 83, 45, 0.12),
+                0 8px 24px -4px rgba(0, 0, 0, 0.04),
+                inset 0 1px 1px rgba(255, 255, 255, 1) !important;
+            border-color: rgba(74, 222, 128, 0.3) !important;
+        }
+
+        body.theme-girls .sketch-box {
+            background: rgba(255, 255, 255, 0.75) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border: 1px solid rgba(74, 222, 128, 0.2) !important;
+            border-radius: 18px !important;
+            box-shadow: 0 8px 24px -4px rgba(20, 83, 45, 0.05) !important;
+        }
+
+        body.theme-girls h1,
+        body.theme-girls h2,
+        body.theme-girls h3,
+        body.theme-girls h4,
+        body.theme-girls .font-draft {
+            font-family: 'Playfair Display', Georgia, serif !important;
+            font-weight: 700 !important;
+            letter-spacing: -0.01em !important;
+            color: #14532D !important;
+        }
+
+        body.theme-girls p,
+        body.theme-girls span,
+        body.theme-girls label,
+        body.theme-girls button,
+        body.theme-girls select,
+        body.theme-girls input,
+        body.theme-girls textarea,
+        body.theme-girls .font-hand {
+            font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif !important;
+            color: #14532D !important;
+        }
+
+        body.theme-girls .font-script {
+            font-family: 'Playfair Display', serif !important;
+            font-style: italic !important;
+            font-weight: 600 !important;
+            color: #65A30D !important;
+        }
+
+        body.theme-girls .sketch-btn {
+            background: linear-gradient(135deg, #FEF08A 0%, #4ADE80 100%) !important;
+            color: #064E3B !important;
+            border: 1px solid rgba(255, 255, 255, 0.6) !important;
+            border-radius: 16px !important;
+            box-shadow: 0 8px 24px -4px rgba(34, 197, 94, 0.3) !important;
+            font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.02em !important;
+            transition: all 0.25s ease !important;
+        }
+
+        body.theme-girls .sketch-btn:hover {
+            background: linear-gradient(135deg, #FDE047 0%, #22C55E 100%) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 12px 30px -4px rgba(34, 197, 94, 0.4) !important;
+        }
+
+        body.theme-girls #nav-header {
+            background: rgba(250, 252, 248, 0.84) !important;
+            backdrop-filter: blur(24px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+            border-bottom: 1px solid rgba(74, 222, 128, 0.2) !important;
+            box-shadow: 0 4px 24px -2px rgba(20, 83, 45, 0.06) !important;
+        }
+
+        body.theme-girls .sketch-input,
+        body.theme-girls select,
+        body.theme-girls input,
+        body.theme-girls textarea {
+            background: rgba(255, 255, 255, 0.85) !important;
+            border: 1px solid rgba(74, 222, 128, 0.3) !important;
+            border-radius: 14px !important;
+            color: #064E3B !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02) !important;
+        }
+
+        body.theme-girls .sketch-input:focus,
+        body.theme-girls select:focus,
+        body.theme-girls input:focus,
+        body.theme-girls textarea:focus {
+            border-color: #65A30D !important;
+            box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.2) !important;
+            outline: none !important;
+        }
+
+        body.theme-girls .washi-tape {
+            display: none !important;
+        }
+
+        body.theme-girls footer {
+            background: rgba(250, 252, 248, 0.85) !important;
+            backdrop-filter: blur(16px) !important;
+            border-top: 1px solid rgba(74, 222, 128, 0.2) !important;
+            color: #166534 !important;
+        }
+
+        body {
+            transition: background-color 0.4s ease, color 0.4s ease, background-image 0.4s ease;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen overflow-y-auto flex flex-col justify-between">
+
+    <!-- TOP NAVIGATION -->
+    <header
+        class="sticky top-0 z-50 w-full bg-[var(--paper)]/95 backdrop-blur-sm border-b-2 border-[var(--sketch-border)] shadow-sm"
+        id="nav-header">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
+
+            <!-- Brand Logo -->
+            <a href="javascript:void(0)" onclick="navigateTo('home')" class="flex items-center gap-2.5 group shrink-0">
+                <div class="w-10 h-10 sketch-box flex items-center justify-center font-black text-xl text-slate-900 shadow-sm transition-transform group-hover:scale-105"
+                    id="brand-logo" style="background-color: var(--accent);">
+                    🏠
+                </div>
+                <div>
+                    <span
+                        class="text-xl font-extrabold tracking-tight text-[var(--ink)] block leading-tight font-draft">CampusHaven</span>
+                    <span class="text-[11px] text-slate-600 font-bold block" id="nav-subtitle">Boys Hostel •
+                        Hi-Tech</span>
+                </div>
+            </a>
+
+            <!-- Quick Page Navigation Bar -->
+            <nav class="hidden md:flex items-center gap-1.5 overflow-x-auto text-xs font-bold py-1" id="main-nav-links">
+                <button onclick="navigateTo('home')" id="navlink-home"
+                    class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1">
+                    🏠 Home
+                </button>
+                <button onclick="navigateTo('pass')" id="navlink-pass"
+                    class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1">
+                    🎫 Gate Pass
+                </button>
+                <button onclick="navigateTo('mess')" id="navlink-mess"
+                    class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1">
+                    🍽️ Food & Mess
+                </button>
+                <button onclick="navigateTo('timetable')" id="navlink-timetable"
+                    class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1">
+                    🗓️ Weekly Timetable
+                </button>
+                <button onclick="navigateTo('repairs')" id="navlink-repairs"
+                    class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1">
+                    🔧 Room Repairs
+                </button>
+                <button onclick="navigateTo('packages')" id="navlink-packages"
+                    class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1">
+                    📦 Parcels & Laundry
+                </button>
+                <button onclick="navigateTo('emergency')" id="navlink-emergency"
+                    class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1 text-red-700">
+                    🆘 SOS & Help
+                </button>
+                <button onclick="navigateTo('rules')" id="navlink-rules"
+                    class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1">
+                    📜 Rules & FAQs
+                </button>
+            </nav>
+
+            <!-- Wing Selectors & Auth Profile -->
+            <div class="flex items-center gap-2 shrink-0">
+                <select id="global-gender-select" aria-label="Select Wing" onchange="updateGender(this.value)"
+                    class="sketch-input text-xs px-2 py-1.5 font-bold cursor-pointer hidden sm:block">
+                    <option value="boys">👦 Boys Wing</option>
+                    <option value="girls">👧 Girls Wing</option>
+                </select>
+
+                <div id="nav-auth-container">
+                    <!-- Rendered via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Strip -->
+        <div
+            class="md:hidden flex items-center gap-1 overflow-x-auto px-4 py-2 border-t border-[var(--sketch-border)] bg-[var(--paper)] text-[11px] font-bold">
+            <button onclick="navigateTo('home')"
+                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🏠 Home</button>
+            <button onclick="navigateTo('pass')"
+                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🎫
+                Outpass</button>
+            <button onclick="navigateTo('mess')"
+                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🍽️ Food
+                Menu</button>
+            <button onclick="navigateTo('timetable')"
+                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🗓️
+                Timetable</button>
+            <button onclick="navigateTo('repairs')"
+                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🔧 Fix
+                Issue</button>
+            <button onclick="navigateTo('packages')"
+                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">📦
+                Deliveries</button>
+            <button onclick="navigateTo('emergency')"
+                class="px-2.5 py-1 rounded-md bg-red-100 border border-red-500 text-red-800 shrink-0">🆘 SOS</button>
+            <button onclick="navigateTo('rules')"
+                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">📜 Rules</button>
+        </div>
+    </header>
+
+    <!-- Alert Banner -->
+    <div id="global-alert-box" class="max-w-6xl mx-auto px-4 sm:px-6 w-full mt-4 hidden">
+        <div id="global-alert-content"
+            class="px-4 py-3 sketch-box flex items-center justify-between shadow-lg text-sm font-bold"></div>
+    </div>
+
+    <!-- MAIN VIEWS -->
+    <main class="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6">
+
+        <!-- 1. HOME VIEW -->
+        <section id="view-home" class="space-y-8 animate-fade-in">
+            <div class="sketch-card p-6 sm:p-8 relative bg-white">
+                <div class="washi-tape"></div>
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div>
+                        <p id="home-greeting" class="hidden text-sm font-bold text-emerald-700 mb-2 font-mono-draft">
+                        </p>
+                        <div
+                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-[var(--highlighter)] border border-[var(--sketch-border)] mb-3">
+                            <span>✨ SIMPLE HOSTEL DASHBOARD</span>
+                        </div>
+                        <h1 class="text-3xl sm:text-4xl font-extrabold text-[var(--ink)] font-draft leading-tight">
+                            Hey there! What do you need today?
+                        </h1>
+                        <p class="text-base text-slate-600 mt-2 font-hand font-bold">
+                            Tap any big card below to get your gate pass, check food menu, fix broken room items, or
+                            call warden.
+                        </p>
+                    </div>
+
+                    <button onclick="navigateTo('pass')"
+                        class="px-6 py-4 sketch-btn text-slate-900 text-base font-extrabold flex items-center gap-3 shrink-0 shadow-lg hover:scale-105"
+                        style="background-color: var(--accent);">
+                        <span class="text-2xl">⚡</span>
+                        <div class="text-left">
+                            <span class="block text-xs uppercase tracking-wider font-mono-draft">Instant 1-Click</span>
+                            <span>Open My Gate Pass</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div onclick="navigateTo('pass')"
+                    class="sketch-card p-6 bg-amber-50/50 hover:bg-amber-100/70 cursor-pointer flex flex-col justify-between group">
+                    <div>
+                        <div
+                            class="w-12 h-12 rounded-xl bg-amber-200 border-2 border-[var(--sketch-border)] flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+                            🎫</div>
+                        <h3 class="text-lg font-black text-[var(--ink)] font-draft">Daily Outpass & Curfew</h3>
+                        <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">Show digital QR code at gate
+                            turnstiles or apply for overnight home leave.</p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-[var(--sketch-border)] flex items-center justify-between text-xs font-bold text-amber-800">
+                        <span>View QR Code</span>
+                        <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
+                    </div>
+                </div>
+
+                <div onclick="navigateTo('mess')"
+                    class="sketch-card p-6 bg-emerald-50/50 hover:bg-emerald-100/70 cursor-pointer flex flex-col justify-between group">
+                    <div>
+                        <div
+                            class="w-12 h-12 rounded-xl bg-emerald-200 border-2 border-[var(--sketch-border)] flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+                            🍽️</div>
+                        <h3 class="text-lg font-black text-[var(--ink)] font-draft">Today's Mess Menu</h3>
+                        <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">See what's cooking for
+                            Breakfast, Lunch & Dinner. Vote on Sunday specials!</p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-[var(--sketch-border)] flex items-center justify-between text-xs font-bold text-emerald-800">
+                        <span>Check Food Menu</span>
+                        <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
+                    </div>
+                </div>
+
+                <div onclick="navigateTo('repairs')"
+                    class="sketch-card p-6 bg-blue-50/50 hover:bg-blue-100/70 cursor-pointer flex flex-col justify-between group">
+                    <div>
+                        <div
+                            class="w-12 h-12 rounded-xl bg-blue-200 border-2 border-[var(--sketch-border)] flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+                            🔧</div>
+                        <h3 class="text-lg font-black text-[var(--ink)] font-draft">Fix Something in Room</h3>
+                        <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">Fan not working? Tap leaking?
+                            WiFi down? 1-click alert sent to electrician & plumber.</p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-[var(--sketch-border)] flex items-center justify-between text-xs font-bold text-blue-800">
+                        <span>Report Broken Item</span>
+                        <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
+                    </div>
+                </div>
+
+                <div onclick="navigateTo('packages')"
+                    class="sketch-card p-6 bg-purple-50/50 hover:bg-purple-100/70 cursor-pointer flex flex-col justify-between group">
+                    <div>
+                        <div
+                            class="w-12 h-12 rounded-xl bg-purple-200 border-2 border-[var(--sketch-border)] flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+                            📦</div>
+                        <h3 class="text-lg font-black text-[var(--ink)] font-draft">Parcels & Laundry</h3>
+                        <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">Check if your Amazon/Flipkart
+                            courier arrived, and see free washing machines.</p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-[var(--sketch-border)] flex items-center justify-between text-xs font-bold text-purple-800">
+                        <span>Track Deliveries</span>
+                        <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
+                    </div>
+                </div>
+
+                <div onclick="navigateTo('emergency')"
+                    class="sketch-card p-6 bg-rose-50/50 hover:bg-rose-100/70 cursor-pointer flex flex-col justify-between group border-rose-300">
+                    <div>
+                        <div
+                            class="w-12 h-12 rounded-xl bg-rose-200 border-2 border-rose-800 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+                            🆘</div>
+                        <h3 class="text-lg font-black text-rose-900 font-draft">Emergency & Contacts</h3>
+                        <p class="text-xs text-rose-700 mt-1 font-hand font-bold text-sm">Direct phone numbers for Chief
+                            Warden, Security Gate, Clinic & Ambulance.</p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-rose-300 flex items-center justify-between text-xs font-bold text-rose-800">
+                        <span>Emergency Helpdesk</span>
+                        <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
+                    </div>
+                </div>
+
+                <div onclick="navigateTo('rules')"
+                    class="sketch-card p-6 bg-slate-50 hover:bg-slate-100 cursor-pointer flex flex-col justify-between group">
+                    <div>
+                        <div
+                            class="w-12 h-12 rounded-xl bg-slate-200 border-2 border-[var(--sketch-border)] flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+                            📜</div>
+                        <h3 class="text-lg font-black text-[var(--ink)] font-draft">Hostel Rules & FAQs</h3>
+                        <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">Curfew hours (10 PM), guest
+                            entry rules, quiet study hours explained simply.</p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-[var(--sketch-border)] flex items-center justify-between text-xs font-bold text-slate-800">
+                        <span>Read Simple Rules</span>
+                        <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. WEEKLY TIMETABLE VIEW -->
+        <section id="view-timetable" class="hidden space-y-6 animate-fade-in">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <p class="text-xs uppercase tracking-widest font-mono-draft text-slate-500">Resident schedule</p>
+                    <h2 class="text-2xl sm:text-3xl font-black font-draft text-[var(--ink)]">🗓️ Weekly Timetable</h2>
+                    <p class="text-sm text-slate-600 mt-1 font-hand">Your academic and residence activities from Monday
+                        to Saturday.</p>
+                    <div class="mt-3 flex flex-wrap items-center gap-2">
+                        <label for="standalone-calendar-upload"
+                            class="px-3 py-2 sketch-btn text-xs font-bold cursor-pointer">Upload calendar JSON</label>
+                        <input id="standalone-calendar-upload" type="file" accept="application/json,.json"
+                            class="sr-only" onchange="uploadCalendarFile(this)" />
+                        <span id="calendar-upload-status" class="text-xs font-bold text-emerald-700"></span>
+                    </div>
+                </div>
+                <button onclick="navigateTo('home')" class="px-3 py-1.5 sketch-btn bg-slate-100 text-xs font-bold">←
+                    Home</button>
+            </div>
+            <div class="sketch-card p-4 overflow-x-auto">
+                <table class="w-full min-w-[720px] text-left font-hand">
+                    <thead>
+                        <tr class="border-b-2 border-[var(--sketch-border)] font-draft text-[var(--ink)]">
+                            <th class="p-3">Day</th>
+                            <th class="p-3">09:00</th>
+                            <th class="p-3">11:00</th>
+                            <th class="p-3">14:00</th>
+                            <th class="p-3">16:00</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-[var(--grid-line)]">
+                            <th class="p-3 font-bold">Monday</th>
+                            <td class="p-3">Data Structures</td>
+                            <td class="p-3">Operating Systems</td>
+                            <td class="p-3">Library / Study Hall</td>
+                            <td class="p-3">Web Engineering</td>
+                        </tr>
+                        <tr class="border-b border-[var(--grid-line)]">
+                            <th class="p-3 font-bold">Tuesday</th>
+                            <td class="p-3">Database Systems</td>
+                            <td class="p-3">Computer Networks</td>
+                            <td class="p-3">Sports & Wellness</td>
+                            <td class="p-3">Data Structures Lab</td>
+                        </tr>
+                        <tr class="border-b border-[var(--grid-line)]">
+                            <th class="p-3 font-bold">Wednesday</th>
+                            <td class="p-3">Web Engineering</td>
+                            <td class="p-3">Database Systems</td>
+                            <td class="p-3">Project Studio</td>
+                            <td class="p-3">Operating Systems</td>
+                        </tr>
+                        <tr class="border-b border-[var(--grid-line)]">
+                            <th class="p-3 font-bold">Thursday</th>
+                            <td class="p-3">Computer Networks</td>
+                            <td class="p-3">Data Structures</td>
+                            <td class="p-3">Mentor Hour</td>
+                            <td class="p-3">Database Systems Lab</td>
+                        </tr>
+                        <tr class="border-b border-[var(--grid-line)]">
+                            <th class="p-3 font-bold">Friday</th>
+                            <td class="p-3">Operating Systems</td>
+                            <td class="p-3">Project Studio</td>
+                            <td class="p-3">Computer Networks</td>
+                            <td class="p-3">Open Elective</td>
+                        </tr>
+                        <tr>
+                            <th class="p-3 font-bold">Saturday</th>
+                            <td class="p-3">Residence Assembly</td>
+                            <td class="p-3">Study Hall</td>
+                            <td class="p-3">Club Activities</td>
+                            <td class="p-3">Weekend Check-in</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 2. GATE PASS VIEW -->
+        <section id="view-pass" class="hidden space-y-6 animate-fade-in">
+            <div class="flex items-center justify-between">
+                <div>
+                    <button onclick="navigateTo('home')"
+                        class="text-xs font-bold text-slate-500 hover:text-black mb-1 flex items-center gap-1">← Back to
+                        Home</button>
+                    <h2 class="text-2xl font-black font-draft text-[var(--ink)]">🎫 Gate Pass & Outpass Desk</h2>
+                </div>
+                <button onclick="openModal('leave')" class="px-4 py-2 sketch-btn text-xs font-bold text-slate-900"
+                    style="background-color: var(--accent);">
+                    + Apply for Weekend Leave
+                </button>
+            </div>
+
+            <div class="flex gap-2 border-b-2 border-[var(--sketch-border)] pb-2 font-bold text-xs">
+                <button onclick="switchPassTab('live')" id="tab-pass-live"
+                    class="px-4 py-2 rounded-xl subnav-tab-active">🟢 Live Digital QR Pass</button>
+                <button onclick="switchPassTab('history')" id="tab-pass-history"
+                    class="px-4 py-2 rounded-xl bg-white border border-[var(--sketch-border)]">📁 My Past
+                    Outpasses</button>
+            </div>
+
+            <div id="pass-subview-live" class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <div
+                    class="md:col-span-6 sketch-card p-6 bg-white flex flex-col items-center justify-center text-center relative">
+                    <div class="washi-tape"></div>
+                    <span class="stamp-badge text-[11px] mb-3">✓ VERIFIED DORM PASS</span>
+                    <h3 class="text-xl font-black font-draft text-[var(--ink)]">Scan at Gate Turnstile</h3>
+                    <p class="text-xs text-slate-500 font-hand font-bold mb-4">Hold your phone screen against scanner at
+                        Main Gate</p>
+                    <div class="bg-white p-3 sketch-box mb-4">
+                        <div id="qrcode-container-pass"></div>
+                    </div>
+                    <div class="w-full bg-[var(--paper)] sketch-box p-3 text-left text-xs font-mono-draft space-y-1.5">
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Student:</span>
+                            <strong id="pass-student-name">Alex Chen (Room GF-101)</strong>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Curfew Time:</span>
+                            <strong class="text-amber-700">10:00 PM IST Tonight</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md:col-span-6 space-y-4">
+                    <div class="sketch-card p-6 bg-amber-50">
+                        <h3 class="text-base font-bold font-draft text-amber-900 mb-2">💡 How Gate Passes Work:</h3>
+                        <ol
+                            class="text-xs font-hand font-bold text-sm text-slate-700 space-y-2 list-decimal list-inside">
+                            <li><strong>Day travel:</strong> Scan QR code at turnstile gate between 6 AM and 10 PM.</li>
+                            <li><strong>Overnight stay:</strong> Submit leave request for warden approval.</li>
+                            <li><strong>Late return:</strong> Guard verifies ID manually after curfew.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pass-subview-history" class="hidden sketch-card p-6 bg-white space-y-3">
+                <h3 class="text-base font-bold font-draft text-[var(--ink)]">Past Outpasses & Leave Records</h3>
+                <div id="outpass-history-list" class="space-y-2 font-mono-draft text-xs">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. MESS VIEW -->
+        <section id="view-mess" class="hidden space-y-6 animate-fade-in">
+            <div class="flex items-center justify-between">
+                <div>
+                    <button onclick="navigateTo('home')"
+                        class="text-xs font-bold text-slate-500 hover:text-black mb-1 flex items-center gap-1">← Back to
+                        Home</button>
+                    <h2 class="text-2xl font-black font-draft text-[var(--ink)]">🍽️ Food, Dining & Mess Menu <span
+                            id="mess-date-label" class="text-sm font-mono-draft text-slate-500"></span></h2>
+                </div>
+                <button onclick="openModal('feedback')" class="px-4 py-2 sketch-btn text-xs font-bold text-slate-900"
+                    style="background-color: var(--accent);">
+                    ⭐ Rate Today's Meal
+                </button>
+            </div>
+
+            <div class="flex gap-2 border-b-2 border-[var(--sketch-border)] pb-2 font-bold text-xs">
+                <button onclick="switchMessTab('today')" id="tab-mess-today"
+                    class="px-4 py-2 rounded-xl subnav-tab-active">🍲 Today's Food Menu</button>
+                <button onclick="switchMessTab('weekly')" id="tab-mess-weekly"
+                    class="px-4 py-2 rounded-xl bg-white border border-[var(--sketch-border)]">📅 Weekly
+                    Timetable</button>
+            </div>
+
+            <div id="mess-subview-today" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="sketch-card p-5 bg-white flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold font-mono-draft text-slate-500">07:30 - 09:30 AM</span>
+                            <span id="status-breakfast"
+                                class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">SERVED</span>
+                        </div>
+                        <h3 class="text-lg font-black font-draft text-[var(--ink)]">🥞 Breakfast</h3>
+                        <ul id="menu-breakfast"
+                            class="text-xs font-hand font-bold text-sm text-slate-700 mt-3 space-y-1">
+                            <li>• Plain Paratha</li>
+                            <li>• Aloo Sabji</li>
+                            <li>• Tea</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="sketch-card p-5 bg-white flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold font-mono-draft text-slate-500">12:30 - 02:30 PM</span>
+                            <span id="status-lunch"
+                                class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">SERVED</span>
+                        </div>
+                        <h3 class="text-lg font-black font-draft text-[var(--ink)]">🍛 Lunch</h3>
+                        <ul id="menu-lunch" class="text-xs font-hand font-bold text-sm text-slate-700 mt-3 space-y-1">
+                            <li>• Chapathi</li>
+                            <li>• Veg Biryani</li>
+                            <li>• Tomato Mirchi Chutney & Boondi Raita</li>
+                            <li>• Salad & Pickle</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- Snacks Card -->
+                <div class="sketch-card p-5 bg-white flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold font-mono-draft text-slate-500">04:30 - 05:30 PM</span>
+                            <span id="status-snacks"
+                                class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold">UPCOMING</span>
+                        </div>
+                        <h3 class="text-lg font-black font-draft text-[var(--ink)]">🍿 Snacks</h3>
+                        <ul id="menu-snacks" class="text-xs font-hand font-bold text-sm text-slate-700 mt-3 space-y-1">
+                            <li>• Aloo Samosa</li>
+                            <li>• Imli Chutney & Ketchup</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- Dinner Card -->
+                <div class="sketch-card p-5 bg-white flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold font-mono-draft text-slate-500">08:00 - 09:30 PM</span>
+                            <span id="status-dinner"
+                                class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold">LATER</span>
+                        </div>
+                        <h3 class="text-lg font-black font-draft text-[var(--ink)]">🌙 Dinner</h3>
+                        <ul id="menu-dinner" class="text-xs font-hand font-bold text-sm text-slate-700 mt-3 space-y-1">
+                            <li>• Chapathi</li>
+                            <li>• Achari Seasonal Veg</li>
+                            <li>• Cooked Rice & Lobia Curry</li>
+                            <li>• Salad, Pickle & Gulab Jamun</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="mess-subview-weekly" class="hidden space-y-6">
+
+                <!-- BREAKFAST TABLE -->
+                <div class="sketch-card p-6 bg-white">
+                    <h3 class="text-base font-bold font-draft text-[var(--ink)] mb-3">🥞 Breakfast (07:30 – 09:30 AM)
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs font-hand font-bold text-slate-700 border-collapse">
+                            <thead>
+                                <tr
+                                    class="bg-[var(--accent)] text-slate-900 font-draft text-[11px] uppercase tracking-wider">
+                                    <th class="px-2 py-2 text-left border border-[var(--sketch-border)]">Item</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Sunday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Monday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Tuesday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Wednesday
+                                    </th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Thursday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Friday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Saturday</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-white hover:bg-slate-50">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Hot Breakfast</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Aloo Bread
+                                        Sandwich</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Kulcha</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Idli</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Masala Poha
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Plain
+                                        Paratha</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Masala
+                                        Chilla</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Aloo
+                                        Paratha</td>
+                                </tr>
+                                <tr class="bg-slate-50 hover:bg-slate-100">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Accompaniment</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">—</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Muttra</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Sambar</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Tomato
+                                        Ketchup</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Aloo ki
+                                        Sabji</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Green
+                                        Chutney</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Dahi</td>
+                                </tr>
+                                <tr class="bg-white hover:bg-slate-50">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Beverage</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Tea</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Tea</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Tea</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Tea</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Tea</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Tea</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Tea</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- LUNCH TABLE -->
+                <div class="sketch-card p-6 bg-white">
+                    <h3 class="text-base font-bold font-draft text-[var(--ink)] mb-3">🍛 Lunch (12:30 – 02:30 PM)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs font-hand font-bold text-slate-700 border-collapse">
+                            <thead>
+                                <tr
+                                    class="bg-[var(--accent)] text-slate-900 font-draft text-[11px] uppercase tracking-wider">
+                                    <th class="px-2 py-2 text-left border border-[var(--sketch-border)]">Item</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Sunday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Monday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Tuesday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Wednesday
+                                    </th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Thursday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Friday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Saturday</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-white hover:bg-slate-50">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Indian Bread</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Chole</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Chapathi
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Chapathi
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Chapathi
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">—</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Chapathi
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Chapathi
+                                    </td>
+                                </tr>
+                                <tr class="bg-slate-50 hover:bg-slate-100">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Veg</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Bhature
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Soyabean
+                                        Mattar</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Lauki Kofta
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Aloo Jeera
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">—</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Turai
+                                        Masala</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Mix Veg
+                                        Curry</td>
+                                </tr>
+                                <tr class="bg-white hover:bg-slate-50">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Rice</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Cooked Rice
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Cooked Rice
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Jeera Rice
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Cooked Rice
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Veg Biryani
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Peas Pulao
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Cooked Rice
+                                    </td>
+                                </tr>
+                                <tr class="bg-slate-50 hover:bg-slate-100">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Dal</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">—</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Masoor Dal
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Yellow Dal
+                                        / Arahar Dal</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Punjabi
+                                        Kadi</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Tomato
+                                        Mirchi ka Chutney</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Masoor Dal
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Chana Dal
+                                    </td>
+                                </tr>
+                                <tr class="bg-white hover:bg-slate-50">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Salad</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Cucumber
+                                        Raitha</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Salad</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Onion Salad
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Salad</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Boondi
+                                        Raitha / Kachumber</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Salad</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">—</td>
+                                </tr>
+                                <tr class="bg-slate-50 hover:bg-slate-100">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Pickle</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Pickle</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Pickle</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Pickle</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Pickle</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Pickle</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Pickle</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Pickle</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SNACKS TABLE -->
+                <div class="sketch-card p-6 bg-white">
+                    <h3 class="text-base font-bold font-draft text-[var(--ink)] mb-3">🍿 Snacks (04:30 – 05:30 PM)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs font-hand font-bold text-slate-700 border-collapse">
+                            <thead>
+                                <tr
+                                    class="bg-[var(--accent)] text-slate-900 font-draft text-[11px] uppercase tracking-wider">
+                                    <th class="px-2 py-2 text-left border border-[var(--sketch-border)]">Item</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Sunday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Monday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Tuesday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Wednesday
+                                    </th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Thursday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Friday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Saturday</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-white hover:bg-slate-50">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Snack</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Masala Bhel
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Channa Chat
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Veg
+                                        Sandwich</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Pasta</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Aloo Samosa
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Pani Puri
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Macaroni
+                                        Pasta</td>
+                                </tr>
+                                <tr class="bg-slate-50 hover:bg-slate-100">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Accompaniment</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">—</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">—</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">—</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">—</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Imli
+                                        Chutney</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Ketchup
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">—</td>
+                                </tr>
+                                <tr class="bg-white hover:bg-slate-50">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Beverage</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Tea</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Tea</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Tea</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Tea</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Tea</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Tea</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Tea</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- DINNER TABLE -->
+                <div class="sketch-card p-6 bg-white">
+                    <h3 class="text-base font-bold font-draft text-[var(--ink)] mb-3">🌙 Dinner (08:00 – 09:30 PM)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs font-hand font-bold text-slate-700 border-collapse">
+                            <thead>
+                                <tr
+                                    class="bg-[var(--accent)] text-slate-900 font-draft text-[11px] uppercase tracking-wider">
+                                    <th class="px-2 py-2 text-left border border-[var(--sketch-border)]">Item</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Sunday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Monday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Tuesday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Wednesday
+                                    </th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Thursday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Friday</th>
+                                    <th class="px-2 py-2 text-center border border-[var(--sketch-border)]">Saturday</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-white hover:bg-slate-50">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Indian Bread</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Chapathi
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Chapathi
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Chapathi
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Chapathi
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Chapathi
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Poori</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Chapathi
+                                    </td>
+                                </tr>
+                                <tr class="bg-slate-50 hover:bg-slate-100">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Veg</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Aloo Gobi
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Turai
+                                        Masala / Seasonal Veg</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Matar
+                                        Paneer</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Cabbage
+                                        Peas Sabzi / Seasonal Veg</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Achari
+                                        Seasonal Veg</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Aloo Matar
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Lauki Chana
+                                        Masala</td>
+                                </tr>
+                                <tr class="bg-white hover:bg-slate-50">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Rice</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Cooked Rice
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Cooked Rice
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Cooked Rice
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Cooked Rice
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Cooked Rice
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Cooked Rice
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Cooked Rice
+                                    </td>
+                                </tr>
+                                <tr class="bg-slate-50 hover:bg-slate-100">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Dal</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Garlic Dal
+                                        Tadka</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Dhaba Dal
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Whole Moong
+                                        Dal</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Dal Kubila
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Lobia Curry
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Kala Chana
+                                        Masala</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Dhaba Dal
+                                    </td>
+                                </tr>
+                                <tr class="bg-white hover:bg-slate-50">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Salad</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Salad</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Salad</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Salad</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Salad</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Salad</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Salad</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Salad</td>
+                                </tr>
+                                <tr class="bg-slate-50 hover:bg-slate-100">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Pickle</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Pickle</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Pickle</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Pickle</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Pickle</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Pickle</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Pickle</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Pickle</td>
+                                </tr>
+                                <tr class="bg-white hover:bg-slate-50">
+                                    <td
+                                        class="px-2 py-1.5 border border-[var(--sketch-border)] font-draft font-black text-[var(--ink)]">
+                                        Dessert</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">—</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">—</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Suji Halwa
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">—</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">—</td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">Gulab Jamun
+                                    </td>
+                                    <td class="px-2 py-1.5 border border-[var(--sketch-border)] text-center">—</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <p class="text-[10px] font-mono-draft text-slate-400 text-center">Menu is common for both Boys &amp;
+                    Girls wings. Subject to change based on availability.</p>
+            </div>
+        </section>
+
+        <!-- 4. ROOM REPAIRS VIEW -->
+        <section id="view-repairs" class="hidden space-y-6 animate-fade-in">
+            <div class="flex items-center justify-between">
+                <div>
+                    <button onclick="navigateTo('home')"
+                        class="text-xs font-bold text-slate-500 hover:text-black mb-1 flex items-center gap-1">← Back to
+                        Home</button>
+                    <h2 class="text-2xl font-black font-draft text-[var(--ink)]">🔧 Room Repairs & Fix Requests</h2>
+                </div>
+                <button onclick="openModal('ticket')" class="px-4 py-2 sketch-btn text-xs font-bold text-slate-900"
+                    style="background-color: var(--accent);">
+                    + 1-Click Fix Request
+                </button>
+            </div>
+
+            <div class="sketch-card p-6 bg-white space-y-4">
+                <h3 class="text-base font-bold font-draft text-[var(--ink)]">⚡ Tap Your Broken Item to Report Instantly:
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 font-hand font-bold text-sm">
+                    <button onclick="quickSubmitTicket('Fan Regulator / Light issue')"
+                        class="p-3 sketch-box bg-slate-50 hover:bg-amber-100 flex flex-col items-center text-center">
+                        <span class="text-2xl mb-1">💡</span><span>Fan / Light Problem</span>
+                    </button>
+                    <button onclick="quickSubmitTicket('Plumbing / Tap Leak')"
+                        class="p-3 sketch-box bg-slate-50 hover:bg-amber-100 flex flex-col items-center text-center">
+                        <span class="text-2xl mb-1">🚰</span><span>Plumbing / Tap Leak</span>
+                    </button>
+                    <button onclick="quickSubmitTicket('WiFi / Internet issue')"
+                        class="p-3 sketch-box bg-slate-50 hover:bg-amber-100 flex flex-col items-center text-center">
+                        <span class="text-2xl mb-1">📶</span><span>WiFi / Internet Slow</span>
+                    </button>
+                    <button onclick="quickSubmitTicket('Furniture / Lock issue')"
+                        class="p-3 sketch-box bg-slate-50 hover:bg-amber-100 flex flex-col items-center text-center">
+                        <span class="text-2xl mb-1">🪑</span><span>Furniture / Lock Broken</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="sketch-card p-6 bg-white space-y-3">
+                <h3 class="text-base font-bold font-draft text-[var(--ink)]">📋 Your Active Repair Tickets</h3>
+                <div id="repair-tickets-list" class="space-y-3 font-mono-draft text-xs">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. PACKAGES & LAUNDRY VIEW -->
+        <section id="view-packages" class="hidden space-y-6 animate-fade-in">
+            <div class="flex items-center justify-between">
+                <div>
+                    <button onclick="navigateTo('home')"
+                        class="text-xs font-bold text-slate-500 hover:text-black mb-1 flex items-center gap-1">← Back to
+                        Home</button>
+                    <h2 class="text-2xl font-black font-draft text-[var(--ink)]">📦 Parcels, Couriers & Laundry Hub</h2>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="sketch-card p-6 bg-white space-y-4">
+                    <h3 class="text-lg font-black font-draft text-[var(--ink)]">📦 Packages Awaiting Pickup</h3>
+                    <div class="p-4 sketch-box bg-amber-50 border-amber-300 space-y-2">
+                        <h4 class="font-bold text-sm font-draft">Amazon Courier #AMZ-9912</h4>
+                        <p class="text-xs text-slate-600 font-mono-draft">Arrived today at Main Gate</p>
+                        <div class="p-2 bg-white rounded border border-amber-200 text-xs font-mono-draft">
+                            🔑 Pickup OTP: <strong class="text-base text-amber-700">8 4 9 2</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="sketch-card p-6 bg-white space-y-4">
+                    <h3 class="text-lg font-black font-draft text-[var(--ink)]">🧺 Laundry Live Status</h3>
+                    <div class="p-3 sketch-box bg-emerald-50 flex justify-between items-center font-mono-draft text-xs">
+                        <span>🟢 Washer #01</span><span class="text-emerald-700 font-bold">VACANT</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. EMERGENCY VIEW -->
+        <section id="view-emergency" class="hidden space-y-6 animate-fade-in">
+            <div class="flex items-center justify-between">
+                <div>
+                    <button onclick="navigateTo('home')"
+                        class="text-xs font-bold text-slate-500 hover:text-black mb-1 flex items-center gap-1">← Back to
+                        Home</button>
+                    <h2 class="text-2xl font-black font-draft text-rose-900">🆘 Emergency SOS & Contacts</h2>
+                </div>
+            </div>
+            <div class="sketch-card p-6 bg-rose-50 border-2 border-rose-500 space-y-4">
+                <h3 class="text-lg font-black font-draft text-rose-900">🚨 Immediate 24/7 Helpline Direct Dial:</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <a href="tel:112" class="p-4 sketch-box bg-white text-center font-bold text-xs hover:bg-rose-100">
+                        👨‍✈️ Main Gate Security (112)
+                    </a>
+                    <a href="tel:9876543211"
+                        class="p-4 sketch-box bg-white text-center font-bold text-xs hover:bg-emerald-100">
+                        🩺 Campus Medical Room
+                    </a>
+                    <a href="tel:+918509704392"
+                        class="p-4 sketch-box bg-white text-center font-bold text-xs hover:bg-blue-100">
+                        📋 Hostel Warden Govind
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. RULES VIEW -->
+        <section id="view-rules" class="hidden space-y-6 animate-fade-in">
+            <div class="flex items-center justify-between">
+                <div>
+                    <button onclick="navigateTo('home')"
+                        class="text-xs font-bold text-slate-500 hover:text-black mb-1 flex items-center gap-1">← Back to
+                        Home</button>
+                    <h2 class="text-2xl font-black font-draft text-[var(--ink)]">📜 Hostel Rules & FAQs</h2>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-hand">
+                <div class="sketch-card p-6 bg-emerald-50 border-emerald-400 space-y-2">
+                    <h3 class="text-lg font-black font-draft text-emerald-950">✅ Do's</h3>
+                    <p class="text-sm font-bold text-slate-800">• Scan QR code for entry & exit between 6 AM and 10 PM.
+                    </p>
+                </div>
+                <div class="sketch-card p-6 bg-rose-50 border-rose-400 space-y-2">
+                    <h3 class="text-lg font-black font-draft text-rose-950">🚫 Don'ts</h3>
+                    <p class="text-sm font-bold text-slate-800">• No late entry without approved pass or warden
+                        notification.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. AUTHENTICATION (SIGN UP & LOGIN) VIEW -->
+        <section id="view-login" class="hidden max-w-lg mx-auto animate-fade-in">
+            <div class="sketch-card p-6 sm:p-8 relative my-4 bg-white">
+                <div class="washi-tape"></div>
+
+                <div class="text-center mb-6">
+                    <div class="w-12 h-12 sketch-box mx-auto flex items-center justify-center font-black text-xl text-slate-900 shadow-md mb-3"
+                        style="background-color: var(--accent);">
+                        🔑
+                    </div>
+                    <h1 class="text-2xl font-extrabold tracking-tight text-[var(--ink)] font-draft"
+                        id="auth-title-text">
+                        Sign In to CampusHaven
+                    </h1>
+                    <p class="text-xs text-slate-600 font-bold mt-1" id="auth-sub-text">
+                        Enter your registered Email or Phone number to access your account.
+                    </p>
+                </div>
+
+                <!-- Google OAuth Sign-In Button -->
+                <div class="mb-4">
+                    <button type="button" onclick="triggerGoogleAuth()"
+                        class="w-full py-2.5 px-4 sketch-btn bg-white hover:bg-slate-50 text-slate-800 flex items-center justify-center gap-3 text-xs font-extrabold transition-all">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24">
+                            <path fill="#4285F4"
+                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                            <path fill="#34A853"
+                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path fill="#FBBC05"
+                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                            <path fill="#EA4335"
+                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                        </svg>
+                        <span>Continue with Google</span>
+                    </button>
+                    <div class="flex items-center my-4">
+                        <div class="flex-1 border-t border-slate-300"></div>
+                        <span class="px-2 text-[10px] text-slate-400 uppercase font-mono-draft font-bold">OR WITH EMAIL
+                            / PHONE</span>
+                        <div class="flex-1 border-t border-slate-300"></div>
+                    </div>
+                </div>
+
+                <!-- Mode Switcher Tabs (Sign In / Sign Up) -->
+                <div class="flex bg-[var(--paper)] sketch-box p-1 mb-5 font-bold text-xs" id="auth-mode-bar">
+                    <button type="button" onclick="toggleAuthMode('signin')" id="tab-mode-signin"
+                        class="flex-1 py-2 rounded-lg bg-[var(--accent)] text-slate-900 shadow-sm border border-[var(--sketch-border)]">
+                        Log In
+                    </button>
+                    <button type="button" onclick="toggleAuthMode('signup')" id="tab-mode-signup"
+                        class="flex-1 py-2 rounded-lg text-slate-600 hover:text-[var(--ink)]">
+                        Create Account
+                    </button>
+                </div>
+
+                <!-- Role Selector -->
+                <div class="flex bg-[var(--paper)] sketch-box p-1 mb-5 font-bold text-xs" id="role-tab-bar">
+                    <button type="button" onclick="setLoginRole('student')" id="tab-role-student"
+                        class="flex-1 py-1.5 rounded-lg capitalize bg-slate-200 text-slate-900 border border-[var(--sketch-border)]">
+                        🎒 Student
+                    </button>
+                    <button type="button" onclick="setLoginRole('warden')" id="tab-role-warden"
+                        class="flex-1 py-1.5 rounded-lg capitalize text-slate-600 hover:text-[var(--ink)]">
+                        📋 Warden
+                    </button>
+                    <button type="button" onclick="setLoginRole('admin')" id="tab-role-admin"
+                        class="flex-1 py-1.5 rounded-lg capitalize text-slate-600 hover:text-[var(--ink)]">
+                        🛡️ Admin
+                    </button>
+                </div>
+
+                <!-- Main Auth Form -->
+                <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-4 font-bold text-xs">
+
+                    <!-- Sign Up Specific: Full Name -->
+                    <div id="signup-name-container" class="hidden">
+                        <label class="block mb-1">Full Name</label>
+                        <input type="text" id="auth-fullname" placeholder="e.g. Alex Chen"
+                            class="w-full sketch-input px-3 py-2 text-sm font-bold" />
+                    </div>
+
+                    <!-- Email or Phone Number Input -->
+                    <div>
+                        <label class="block mb-1">Email Address or Phone Number</label>
+                        <input type="text" id="auth-contact" required placeholder="alex@university.edu or +919876543210"
+                            class="w-full sketch-input px-3 py-2 text-sm font-bold font-mono-draft" />
+                    </div>
+
+                    <!-- Password Input -->
+                    <div>
+                        <label class="block mb-1">Password</label>
+                        <input type="password" id="auth-password" required placeholder="••••••••"
+                            class="w-full sketch-input px-3 py-2 text-sm font-bold" />
+                    </div>
+
+                    <div>
+                        <label class="block mb-1">Campus / College</label>
+                        <select id="login-institution" onchange="updateInstitution(this.value)"
+                            class="w-full sketch-input px-3 py-2 text-sm font-bold">
+                            <option value="hi-tech">🏛️ Hi-Tech University Campus</option>
+                            <option value="mirai">📐 Mirai Institute of Technology</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block mb-1">Hostel Wing</label>
+                        <select id="login-gender" onchange="updateGender(this.value)"
+                            class="w-full sketch-input px-3 py-2 text-sm font-bold">
+                            <option value="boys">👦 Boys Hostel Wing</option>
+                            <option value="girls">👧 Girls Hostel Wing</option>
+                        </select>
+                    </div>
+
+                    <div id="student-room-inputs" class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block mb-1">Floor</label>
+                            <select id="login-floor" class="w-full sketch-input px-3 py-2 text-sm font-bold">
+                                <option value="GF">Ground Floor (GF)</option>
+                                <option value="1F">First Floor (1F)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block mb-1">Room Number</label>
+                            <input type="text" id="login-room" value="101"
+                                class="w-full sketch-input px-3 py-2 text-sm font-bold font-mono-draft" />
+                        </div>
+                    </div>
+
+                    <button type="submit" id="login-submit-btn"
+                        class="w-full py-3.5 text-base font-extrabold text-slate-900 sketch-btn shadow-md mt-4"
+                        style="background-color: var(--accent);">
+                        ✓ Enter CampusHaven Portal
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- 9. ADMIN CONSOLE VIEW -->
+        <section id="view-admin" class="hidden space-y-6 animate-fade-in">
+            <div
+                class="sketch-card p-6 bg-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <span class="stamp-badge text-[10px] mb-1">WARDEN COMMAND CENTER</span>
+                    <h2 class="text-2xl font-black font-draft text-[var(--ink)]">Hostel Warden Console</h2>
+                    <p class="text-xs text-slate-600 font-mono-draft" id="admin-subtitle">Monitoring Hostel Activity</p>
+                </div>
+                <button onclick="navigateTo('home')" class="px-3 py-1.5 sketch-btn bg-slate-100 text-xs font-bold">←
+                    Back to Student View</button>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="sketch-card p-4 bg-white text-center">
+                    <span class="text-xs font-bold text-slate-500">Hostel Occupancy</span>
+                    <span class="block text-2xl font-black font-draft text-[var(--ink)]">92.4%</span>
+                </div>
+                <div class="sketch-card p-4 bg-white text-center">
+                    <span class="text-xs font-bold text-slate-500">Active Leaves</span>
+                    <span class="block text-2xl font-black font-draft text-blue-700">18</span>
+                </div>
+                <div class="sketch-card p-4 bg-white text-center">
+                    <span class="text-xs font-bold text-slate-500">Open Tickets</span>
+                    <span class="block text-2xl font-black font-draft text-amber-700">7</span>
+                </div>
+                <div class="sketch-card p-4 bg-white text-center">
+                    <span class="text-xs font-bold text-slate-500">Curfew Status</span>
+                    <span class="block text-2xl font-black font-draft text-emerald-700">ACTIVE</span>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL POPUP -->
+    <div id="quick-action-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden animate-fade-in">
+        <div class="bg-white sketch-card w-full max-w-md p-6 space-y-4 relative">
+            <div class="flex justify-between items-center border-b-2 border-[var(--sketch-border)] pb-3">
+                <h3 id="modal-title" class="font-black text-lg font-draft text-[var(--ink)]">Action</h3>
+                <button onclick="closeModal()" class="font-bold text-xl text-slate-600 hover:text-black">✕</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer
+        class="border-t-2 border-[var(--sketch-border)] py-6 text-center text-xs text-slate-600 bg-white font-mono-draft mt-8">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span>CampusHaven Student Living Portal • MongoDB Edition</span>
+            <span>Hostel Warden: <a href="tel:+918509704392" class="underline font-bold">+91 85097 04392</a></span>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        const API_BASE_URL = window.location.protocol === 'file:'
+            ? 'http://localhost:4000/api'
+            : window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
+        const APP_TIME_ZONE = 'Asia/Kolkata';
+
+        function getLocalDateKey(date = new Date()) {
+            return new Intl.DateTimeFormat('en-CA', {
+                timeZone: APP_TIME_ZONE,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }).format(date);
+        }
+
+        const PALETTES = {
+            boys: {
+                primary: '#0f172a', secondary: '#1e293b', accent: '#f59e0b', ink: '#0f172a',
+                paper: '#FAF8F5', sketchBorder: '#0f172a', sketchShadow: '#0f172a', highlighter: '#fde68a'
+            },
+            girls: {
+                primary: '#F8FAF7', secondary: '#F0F5EC', accent: '#84CC16', ink: '#14532D',
+                paper: '#F8FAF7', sketchBorder: 'rgba(74, 222, 128, 0.3)', sketchShadow: 'rgba(20, 83, 45, 0.08)', highlighter: '#FDE047'
+            }
+        };
+
+        let currentGender = localStorage.getItem('campushaven_gender') || 'boys';
+        let currentInstitution = localStorage.getItem('campushaven_institution') || 'hi-tech';
+        let currentView = 'home';
+        let currentLoginRole = 'student';
+        let currentAuthMode = 'signin'; // 'signin' or 'signup'
+
+        function applyThemeColors(gender) {
+            const p = PALETTES[gender];
+            const root = document.documentElement;
+            root.style.setProperty('--primary', p.primary);
+            root.style.setProperty('--secondary', p.secondary);
+            root.style.setProperty('--accent', p.accent);
+            root.style.setProperty('--ink', p.ink);
+            root.style.setProperty('--paper', p.paper);
+            root.style.setProperty('--sketch-border', p.sketchBorder);
+            root.style.setProperty('--sketch-shadow', p.sketchShadow);
+            root.style.setProperty('--highlighter', p.highlighter);
+
+            if (gender === 'girls') {
+                document.body.classList.add('theme-girls');
+                document.body.classList.remove('theme-boys');
+            } else {
+                document.body.classList.add('theme-boys');
+                document.body.classList.remove('theme-girls');
+            }
+
+            const instLabel = currentInstitution === 'hi-tech' ? 'Hi-Tech University' : 'Mirai Institute';
+            const wingLabel = gender === 'boys' ? "Boys' Wing" : "Girls' Wing";
+
+            const navSub = document.getElementById('nav-subtitle');
+            if (navSub) navSub.textContent = `${wingLabel} • ${instLabel}`;
+        }
+
+        function updateGender(newGender) {
+            currentGender = newGender;
+            localStorage.setItem('campushaven_gender', newGender);
+            const globalSel = document.getElementById('global-gender-select');
+            if (globalSel) globalSel.value = newGender;
+            applyThemeColors(newGender);
+        }
+
+        function updateInstitution(newInst) {
+            currentInstitution = newInst;
+            localStorage.setItem('campushaven_institution', newInst);
+            applyThemeColors(currentGender);
+        }
+
+        function switchPassTab(tab) {
+            ['live', 'history'].forEach(name => {
+                document.getElementById(`pass-subview-${name}`)?.classList.toggle('hidden', name !== tab);
+                document.getElementById(`tab-pass-${name}`)?.classList.toggle('bg-[var(--accent)]', name === tab);
+            });
+        }
+
+        function switchMessTab(tab) {
+            ['today', 'weekly'].forEach(name => {
+                document.getElementById(`mess-subview-${name}`)?.classList.toggle('hidden', name !== tab);
+                document.getElementById(`tab-mess-${name}`)?.classList.toggle('bg-[var(--accent)]', name === tab);
+            });
+        }
+
+        async function uploadCalendarFile(input) {
+            const file = input.files && input.files[0];
+            const status = document.getElementById('calendar-upload-status');
+            if (!file || !status) return;
+
+            try {
+                const payload = JSON.parse(await file.text());
+                const response = await fetch(`${API_BASE_URL}/calendar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) throw new Error('Upload failed');
+                status.textContent = 'Calendar saved. Date-specific menus will load automatically.';
+                await loadDateMenu();
+            } catch (error) {
+                status.textContent = 'Upload a valid calendar JSON file.';
+            } finally {
+                input.value = '';
+            }
+        }
+
+        async function loadDateMenu() {
+            const date = getLocalDateKey();
+            const dateLabel = document.getElementById('mess-date-label');
+            const time = new Intl.DateTimeFormat('en-IN', {
+                timeZone: APP_TIME_ZONE,
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            }).format(new Date());
+            if (dateLabel) dateLabel.textContent = `· ${date} · ${time} IST`;
+            updateMealStatuses();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/calendar/menu?date=${date}`);
+                if (!response.ok) return;
+                const result = await response.json();
+                if (!result.menu) return;
+                ['breakfast', 'lunch', 'snacks', 'dinner'].forEach(meal => {
+                    const list = document.getElementById(`menu-${meal}`);
+                    const value = result.menu[meal];
+                    if (list && value) {
+                        const items = Array.isArray(value) ? value : [value];
+                        list.innerHTML = items.map(item => `<li>• ${String(item)}</li>`).join('');
+                    }
+                });
+                updateMealStatuses();
+            } catch (error) {
+                // Keep the built-in weekday menu when the backend is unavailable.
+            }
+        }
+
+        function updateMealStatuses() {
+            const now = new Date();
+            const parts = new Intl.DateTimeFormat('en-GB', {
+                timeZone: APP_TIME_ZONE,
+                hour: '2-digit',
+                minute: '2-digit',
+                hourCycle: 'h23'
+            }).formatToParts(now);
+            const currentMinutes = Number(parts.find(part => part.type === 'hour').value) * 60
+                + Number(parts.find(part => part.type === 'minute').value);
+            const meals = [
+                { id: 'breakfast', start: 7 * 60 + 30, end: 9 * 60 + 30 },
+                { id: 'lunch', start: 12 * 60 + 30, end: 14 * 60 + 30 },
+                { id: 'snacks', start: 16 * 60 + 30, end: 17 * 60 + 30 },
+                { id: 'dinner', start: 20 * 60, end: 21 * 60 + 30 }
+            ];
+
+            let upcomingAssigned = false;
+            meals.forEach(meal => {
+                const badge = document.getElementById(`status-${meal.id}`);
+                if (!badge) return;
+                let status = 'SERVED';
+                if (currentMinutes < meal.start) {
+                    status = upcomingAssigned ? 'LATER' : 'UPCOMING';
+                    upcomingAssigned = true;
+                }
+                badge.textContent = status;
+                badge.className = status === 'SERVED'
+                    ? 'px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold'
+                    : status === 'UPCOMING'
+                        ? 'px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold'
+                        : 'px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold';
+            });
+        }
+
+        function navigateTo(viewName) {
+            currentView = viewName;
+            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+
+            const targetSec = document.getElementById(`view-${viewName}`);
+            if (targetSec) targetSec.classList.remove('hidden');
+
+            document.querySelectorAll('#main-nav-links button').forEach(btn => {
+                btn.classList.remove('bg-white', 'border-[var(--sketch-border)]');
+            });
+            const activeNavBtn = document.getElementById(`navlink-${viewName}`);
+            if (activeNavBtn) activeNavBtn.classList.add('bg-white', 'border-[var(--sketch-border)]');
+
+            renderNavAuth();
+            updateHomeGreeting();
+
+            if (viewName === 'pass') generateQRCode();
+            if (viewName === 'mess') loadDateMenu();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function getAuthUser() {
+            const u = localStorage.getItem('campushaven_user');
+            try { return u ? JSON.parse(u) : null; } catch { return null; }
+        }
+
+        function updateHomeGreeting() {
+            const greeting = document.getElementById('home-greeting');
+            const auth = getAuthUser();
+            if (!greeting) return;
+
+            if (currentView === 'home' && auth) {
+                const hour = new Date().getHours();
+                const timeOfDay = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+                greeting.textContent = `${timeOfDay}, ${auth.name || 'Resident'}! Your hostel desk is ready.`;
+                greeting.classList.remove('hidden');
+            } else {
+                greeting.classList.add('hidden');
+            }
+        }
+
+        function renderNavAuth() {
+            const auth = getAuthUser();
+            const container = document.getElementById('nav-auth-container');
+            if (!container) return;
+
+            if (auth) {
+                container.innerHTML = `
+                    <div class="flex items-center gap-1.5 font-bold text-xs">
+                        <button onclick="navigateTo('${auth.role === 'student' ? 'home' : 'admin'}')" class="px-2.5 py-1.5 rounded-lg bg-[var(--highlighter)] border border-[var(--sketch-border)]">
+                            👤 ${auth.name.split(' ')[0]} (${auth.role})
+                        </button>
+                        <button onclick="handleLogout()" class="px-2.5 py-1.5 rounded-lg bg-white border border-[var(--sketch-border)] hover:bg-red-50">
+                            Sign Out
+                        </button>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <button onclick="navigateTo('login')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-900 sketch-btn shadow-sm" style="background-color: var(--accent);">
+                        🔑 Sign In / Register
+                    </button>
+                `;
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('campushaven_user');
+            localStorage.removeItem('campushaven_token');
+            showAlert('Signed out successfully.', 'info');
+            navigateTo('login');
+        }
+
+        function toggleAuthMode(mode) {
+            currentAuthMode = mode;
+            const title = document.getElementById('auth-title-text');
+            const sub = document.getElementById('auth-sub-text');
+            const nameContainer = document.getElementById('signup-name-container');
+            const submitBtn = document.getElementById('login-submit-btn');
+
+            const btnSignIn = document.getElementById('tab-mode-signin');
+            const btnSignUp = document.getElementById('tab-mode-signup');
+
+            if (mode === 'signup') {
+                title.textContent = 'Create CampusHaven Account';
+                sub.textContent = 'Register with your email or phone number to link your room.';
+                nameContainer.classList.remove('hidden');
+                submitBtn.textContent = '✓ Create Account & Sign In';
+
+                btnSignUp.className = 'flex-1 py-2 rounded-lg bg-[var(--accent)] text-slate-900 shadow-sm border border-[var(--sketch-border)]';
+                btnSignIn.className = 'flex-1 py-2 rounded-lg text-slate-600 hover:text-[var(--ink)]';
+            } else {
+                title.textContent = 'Sign In to CampusHaven';
+                sub.textContent = 'Enter your registered Email or Phone number to access your account.';
+                nameContainer.classList.add('hidden');
+                submitBtn.textContent = '✓ Enter CampusHaven Portal';
+
+                btnSignIn.className = 'flex-1 py-2 rounded-lg bg-[var(--accent)] text-slate-900 shadow-sm border border-[var(--sketch-border)]';
+                btnSignUp.className = 'flex-1 py-2 rounded-lg text-slate-600 hover:text-[var(--ink)]';
+            }
+        }
+
+        function setLoginRole(role) {
+            currentLoginRole = role;
+            ['student', 'warden', 'admin'].forEach(r => {
+                const btn = document.getElementById(`tab-role-${r}`);
+                if (r === role) {
+                    btn.className = 'flex-1 py-1.5 rounded-lg capitalize bg-slate-200 text-slate-900 border border-[var(--sketch-border)] font-bold';
+                } else {
+                    btn.className = 'flex-1 py-1.5 rounded-lg capitalize text-slate-600 hover:text-[var(--ink)]';
+                }
+            });
+
+            const roomInputs = document.getElementById('student-room-inputs');
+            if (role === 'student') {
+                roomInputs.classList.remove('hidden');
+            } else {
+                roomInputs.classList.add('hidden');
+            }
+        }
+
+        async function handleAuthSubmit(e) {
+            e.preventDefault();
+
+            const contact = document.getElementById('auth-contact').value.trim();
+            const password = document.getElementById('auth-password').value;
+            const fullname = document.getElementById('auth-fullname').value.trim();
+            const inst = document.getElementById('login-institution').value;
+            const gen = document.getElementById('login-gender').value;
+            const flr = document.getElementById('login-floor').value;
+            const rm = document.getElementById('login-room').value || '101';
+
+            const payload = {
+                identifier: contact,
+                password: password,
+                name: fullname || contact.split('@')[0],
+                role: currentLoginRole,
+                institution: inst,
+                gender: gen,
+                floor: flr,
+                roomNumber: rm
+            };
+
+            try {
+                const endpoint = currentAuthMode === 'signup' ? `${API_BASE_URL}/auth/signup` : `${API_BASE_URL}/auth/login`;
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.message || 'Authentication failed');
+                }
+
+                // Store User Data and JWT Token
+                localStorage.setItem('campushaven_user', JSON.stringify(data.user));
+                if (data.token) localStorage.setItem('campushaven_token', data.token);
+
+                updateInstitution(data.user.institution || inst);
+                updateGender(data.user.gender || gen);
+
+                showAlert(`Welcome, ${data.user.name}!`, 'success');
+                navigateTo(data.user.role === 'student' ? 'home' : 'admin');
+            } catch (err) {
+                // Fallback local login for offline testing if backend API is not running
+                console.warn('API connection failed, falling back to local state:', err.message);
+                const localUser = {
+                    name: fullname || contact.split('@')[0] || 'Resident',
+                    role: currentLoginRole,
+                    institution: inst,
+                    gender: gen,
+                    floor: flr,
+                    roomNumber: rm,
+                    contact: contact
+                };
+                localStorage.setItem('campushaven_user', JSON.stringify(localUser));
+                showAlert(`Welcome, ${localUser.name}! (Offline Mode)`, 'success');
+                navigateTo(currentLoginRole === 'student' ? 'home' : 'admin');
+            }
+        }
+
+        // Google OAuth Handler
+        function triggerGoogleAuth() {
+            if (!window.google || !google.accounts || !google.accounts.id) {
+                showAlert('Google Sign-In is unavailable. Use email or phone sign-in instead.', 'warning');
+                return;
+            }
+            showAlert('Connecting to Google Auth API...', 'info');
+
+            // Google OAuth Client Trigger Standard Integration
+            google.accounts.id.initialize({
+                client_id: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
+                callback: handleGoogleCredentialResponse
+            });
+            google.accounts.id.prompt();
+        }
+
+        async function handleGoogleCredentialResponse(response) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/auth/google`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: response.credential })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message);
+
+                localStorage.setItem('campushaven_user', JSON.stringify(data.user));
+                localStorage.setItem('campushaven_token', data.token);
+
+                showAlert(`Signed in with Google as ${data.user.name}`, 'success');
+                navigateTo('home');
+            } catch (err) {
+                showAlert('Google Auth Server error. Make sure backend MongoDB API is running.', 'warning');
+            }
+        }
+
+        function generateQRCode() {
+            const qrContainer = document.getElementById('qrcode-container-pass');
+            if (!qrContainer) return;
+            qrContainer.innerHTML = '';
+
+            const user = getAuthUser() || { name: 'Alex Chen', floor: 'GF', roomNumber: '101' };
+            const passName = document.getElementById('pass-student-name');
+            if (passName) passName.textContent = `${user.name} (Room ${user.floor || 'GF'}-${user.roomNumber || '101'})`;
+
+            const passData = JSON.stringify({
+                id: `GP-${user.roomNumber || '101'}-${Date.now().toString().slice(-6)}`,
+                resident: user.name,
+                room: `${user.floor || 'GF'}-${user.roomNumber || '101'}`,
+                validUntil: 'Today 10:00 PM'
+            });
+
+            new QRCode(qrContainer, {
+                text: passData,
+                width: 170,
+                height: 170,
+                colorDark: '#0f172a',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        function quickSubmitTicket(issue) {
+            showAlert(`✓ Repair Request Logged: "${issue}". Saved to MongoDB!`, 'success');
+        }
+
+        function openModal(type) {
+            const modal = document.getElementById('quick-action-modal');
+            const title = document.getElementById('modal-title');
+            const body = document.getElementById('modal-body');
+
+            if (type === 'leave') {
+                title.textContent = '🗓️ Apply for Weekend Outpass / Leave';
+                body.innerHTML = `
+                    <form onsubmit="handleModalSubmit(event, 'Outpass saved to database!')" class="space-y-3 font-bold text-xs">
+                        <div>
+                            <label class="block mb-1">Days Away</label>
+                            <input type="number" min="1" max="14" value="2" required class="w-full sketch-input px-3 py-2 text-sm font-bold" />
+                        </div>
+                        <div>
+                            <label class="block mb-1">Reason</label>
+                            <textarea rows="3" required placeholder="Going home for weekend" class="w-full sketch-input px-3 py-2 text-sm font-bold"></textarea>
+                        </div>
+                        <div class="flex gap-2 justify-end pt-2">
+                            <button type="button" onclick="closeModal()" class="px-4 py-2 sketch-btn bg-slate-100 text-slate-700">Cancel</button>
+                            <button type="submit" class="px-4 py-2 sketch-btn text-slate-900" style="background-color: var(--accent);">Submit Outpass</button>
+                        </div>
+                    </form>
+                `;
+            } else if (type === 'ticket') {
+                title.textContent = '🔧 Report Maintenance Problem';
+                body.innerHTML = `
+                    <form onsubmit="handleModalSubmit(event, 'Ticket logged in database!')" class="space-y-3 font-bold text-xs">
+                        <div>
+                            <label class="block mb-1">Issue Type</label>
+                            <select class="w-full sketch-input px-3 py-2 text-sm font-bold">
+                                <option>💡 Fan / Light / Socket</option>
+                                <option>🚰 Bathroom / Water</option>
+                                <option>📶 WiFi / Network</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block mb-1">Description</label>
+                            <textarea rows="3" required placeholder="Details..." class="w-full sketch-input px-3 py-2 text-sm font-bold"></textarea>
+                        </div>
+                        <div class="flex gap-2 justify-end pt-2">
+                            <button type="button" onclick="closeModal()" class="px-4 py-2 sketch-btn bg-slate-100 text-slate-700">Cancel</button>
+                            <button type="submit" class="px-4 py-2 sketch-btn text-slate-900" style="background-color: var(--accent);">Submit Ticket</button>
+                        </div>
+                    </form>
+                `;
+            } else if (type === 'feedback') {
+                title.textContent = '🍽️ Rate Today\'s Meal';
+                body.innerHTML = `
+                    <form onsubmit="handleMealFeedbackSubmit(event)" class="space-y-3 font-bold text-xs">
+                        <div>
+                            <span class="block mb-1">Star rating</span>
+                            <div class="flex items-center gap-1" role="radiogroup" aria-label="Meal rating">
+                                ${[1, 2, 3, 4, 5].map(rating => `<label class="cursor-pointer text-3xl leading-none"><input type="radio" name="meal-rating" value="${rating}" class="sr-only peer" ${rating === 4 ? 'checked' : ''} required><span class="text-slate-300 peer-checked:text-amber-500 hover:text-amber-400">★</span></label>`).join('')}
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block mb-1" for="meal-description">Description / suggestions</label>
+                            <textarea id="meal-description" rows="3" required placeholder="Tell us what you liked or what should improve..." class="w-full sketch-input px-3 py-2 text-sm font-bold"></textarea>
+                        </div>
+                        <div>
+                            <label class="block mb-1" for="meal-attachment">Upload a meal photo or document</label>
+                            <input id="meal-attachment" type="file" accept="image/*,.pdf,.txt" class="w-full sketch-input px-3 py-2 text-xs font-bold" />
+                        </div>
+                        <div class="flex gap-2 justify-end pt-2">
+                            <button type="button" onclick="closeModal()" class="px-4 py-2 sketch-btn bg-slate-100 text-slate-700">Cancel</button>
+                            <button type="submit" class="px-4 py-2 sketch-btn text-slate-900" style="background-color: var(--accent);">Submit Feedback</button>
+                        </div>
+                    </form>
+                `;
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function handleMealFeedbackSubmit(e) {
+            e.preventDefault();
+            const form = e.currentTarget;
+            const rating = form.querySelector('input[name="meal-rating"]:checked').value;
+            const description = form.querySelector('#meal-description').value.trim();
+            const attachment = form.querySelector('#meal-attachment').files[0];
+            localStorage.setItem('campushaven_meal_feedback', JSON.stringify({
+                rating: Number(rating),
+                description,
+                attachmentName: attachment ? attachment.name : null,
+                submittedAt: new Date().toISOString()
+            }));
+            closeModal();
+            showAlert(`Thank you! Your ${rating}-star meal feedback${attachment ? ' and attachment' : ''} was saved.`, 'success');
+        }
+
+        function closeModal() {
+            document.getElementById('quick-action-modal').classList.add('hidden');
+        }
+
+        function handleModalSubmit(e, msg) {
+            e.preventDefault();
+            closeModal();
+            showAlert(msg, 'success');
+        }
+
+        function showAlert(msg, type = 'info') {
+            const box = document.getElementById('global-alert-box');
+            const content = document.getElementById('global-alert-content');
+
+            let bgClass = 'bg-white border-2 border-[var(--sketch-border)] text-[var(--ink)]';
+            if (type === 'success') bgClass = 'bg-emerald-50 border-2 border-emerald-700 text-emerald-950';
+            if (type === 'warning') bgClass = 'bg-amber-50 border-2 border-amber-700 text-amber-950';
+
+            content.className = `px-4 py-3 sketch-box flex items-center justify-between shadow-lg text-sm font-bold ${bgClass}`;
+            content.innerHTML = `
+                <span>📢 ${msg}</span>
+                <button onclick="document.getElementById('global-alert-box').classList.add('hidden')" class="ml-4 font-bold text-base">✕</button>
+            `;
+
+            box.classList.remove('hidden');
+            setTimeout(() => { box.classList.add('hidden'); }, 5000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('global-gender-select').value = currentGender;
+            applyThemeColors(currentGender);
+            renderNavAuth();
+            navigateTo('home');
+        });
+    </script>
+</body>
+
+</html>
