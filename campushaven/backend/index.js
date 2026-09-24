@@ -132,7 +132,7 @@ app.get(['/api/auth/google/start', '/api/auth/google'], (req, res) => {
   const state = crypto.randomBytes(24).toString('hex');
   const returnTo = typeof req.query.returnTo === 'string'
     ? req.query.returnTo
-    : process.env.GOOGLE_RETURN_URL || 'http://localhost:3000/login';
+    : process.env.GOOGLE_RETURN_URL || 'http://localhost:5500/login';
   googleSessions.set(state, { returnTo, createdAt: Date.now() });
 
   const params = new URLSearchParams({

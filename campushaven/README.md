@@ -79,7 +79,7 @@ npm install
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) in your browser.
+Visit [http://localhost:5500](http://localhost:5500) in your browser.
 
 ---
 
