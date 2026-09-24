@@ -76,6 +76,49 @@ function getGoogleRedirectUri() {
   return process.env.GOOGLE_REDIRECT_URI || `http://localhost:${PORT}/api/auth/google/callback`;
 }
 
+function getGoogleReturnUrl(candidate) {
+  const fallback = process.env.GOOGLE_RETURN_URL || 'http://localhost:5500/login';
+  if (typeof candidate !== 'string') return fallback;
+
+  try {
+    const requested = new URL(candidate);
+    const configured = new URL(fallback);
+    if (requested.origin !== configured.origin || requested.pathname !== configured.pathname) return fallback;
+    return requested.toString();
+  } catch {
+    return fallback;
+  }
+}
+
+function createGoogleState(returnTo) {
+  const payload = Buffer.from(JSON.stringify({
+    returnTo,
+    createdAt: Date.now(),
+    nonce: crypto.randomBytes(24).toString('hex')
+  })).toString('base64url');
+  const signature = crypto.createHmac('sha256', process.env.GOOGLE_CLIENT_SECRET).update(payload).digest('base64url');
+  return `${payload}.${signature}`;
+}
+
+function readGoogleState(state) {
+  if (typeof state !== 'string') return null;
+  const [payload, signature] = state.split('.');
+  if (!payload || !signature) return null;
+
+  const expectedSignature = crypto.createHmac('sha256', process.env.GOOGLE_CLIENT_SECRET).update(payload).digest('base64url');
+  const actualBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expectedSignature);
+  if (actualBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(actualBuffer, expectedBuffer)) return null;
+
+  try {
+    const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    if (!parsed.returnTo || Date.now() - parsed.createdAt > 10 * 60 * 1000) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 function getMailTransport() {
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) return null;
   return nodemailer.createTransport({
@@ -129,11 +172,8 @@ app.get(['/api/auth/google/start', '/api/auth/google'], (req, res) => {
     return res.status(503).json({ message: 'Google OAuth is not configured on the backend.' });
   }
 
-  const state = crypto.randomBytes(24).toString('hex');
-  const returnTo = typeof req.query.returnTo === 'string'
-    ? req.query.returnTo
-    : process.env.GOOGLE_RETURN_URL || 'http://localhost:5500/login';
-  googleSessions.set(state, { returnTo, createdAt: Date.now() });
+  const returnTo = getGoogleReturnUrl(req.query.returnTo);
+  const state = createGoogleState(returnTo);
 
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID,
@@ -149,9 +189,8 @@ app.get(['/api/auth/google/start', '/api/auth/google'], (req, res) => {
 });
 
 app.get('/api/auth/google/callback', async (req, res) => {
-  const session = googleSessions.get(req.query.state);
-  if (!session || Date.now() - session.createdAt > 10 * 60 * 1000) return res.status(400).send('Google login session expired.');
-  googleSessions.delete(req.query.state);
+  const session = readGoogleState(req.query.state);
+  if (!session) return res.status(400).send('Google login session expired or invalid.');
   if (req.query.error) return res.redirect(`${session.returnTo}?google_error=${encodeURIComponent(req.query.error)}`);
 
   try {
