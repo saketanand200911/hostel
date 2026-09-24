@@ -1,0 +1,240 @@
+const express = require('express');
+const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+
+const app = express();
+const PORT = process.env.PORT || 4000;
+const CALENDAR_TIME_ZONE = 'Asia/Kolkata';
+const googleSessions = new Map();
+
+app.use(cors());
+app.use(express.json());
+
+const calendarStorePath = path.join(__dirname, 'calendar-data.json');
+const defaultCalendarStore = {
+  calendar: null,
+  menuByDate: {},
+  events: [],
+  timeZone: CALENDAR_TIME_ZONE,
+  updatedAt: null
+};
+
+function readCalendarStore() {
+  try {
+    return { ...defaultCalendarStore, ...JSON.parse(fs.readFileSync(calendarStorePath, 'utf8')) };
+  } catch {
+    return { ...defaultCalendarStore };
+  }
+}
+
+function writeCalendarStore(store) {
+  fs.writeFileSync(calendarStorePath, JSON.stringify(store, null, 2));
+}
+
+function getLocalDateKey(date = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: CALENDAR_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(date);
+}
+
+function getGoogleRedirectUri() {
+  return process.env.GOOGLE_REDIRECT_URI || `http://localhost:${PORT}/api/auth/google/callback`;
+}
+
+function getMailTransport() {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) return null;
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT || 587),
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+  });
+}
+
+async function sendWelcomeEmail(user) {
+  const transport = getMailTransport();
+  if (!transport) return false;
+  await transport.sendMail({
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to: user.email,
+    subject: 'Welcome to CampusHaven',
+    text: `Welcome to CampusHaven, ${user.name}! Your hostel portal account is ready.`,
+    html: `<p>Welcome to CampusHaven, <strong>${user.name}</strong>!</p><p>Your hostel portal account is ready.</p>`
+  });
+  return true;
+}
+
+// Sample rooms dataset per floor, gender, institution, and occupancy
+const sampleRooms = [
+  // Ground Floor (GF)
+  { id: 'GF-101', floor: 'GF', roomNumber: '101', gender: 'boys', institution: 'hi-tech', capacity: 2, occupied: 2, status: 'Full' },
+  { id: 'GF-102', floor: 'GF', roomNumber: '102', gender: 'boys', institution: 'hi-tech', capacity: 2, occupied: 1, status: 'Available' },
+  { id: 'GF-103', floor: 'GF', roomNumber: '103', gender: 'girls', institution: 'hi-tech', capacity: 2, occupied: 2, status: 'Full' },
+  { id: 'GF-104', floor: 'GF', roomNumber: '104', gender: 'girls', institution: 'hi-tech', capacity: 2, occupied: 0, status: 'Vacant' },
+  { id: 'GF-105', floor: 'GF', roomNumber: '105', gender: 'boys', institution: 'mirai', capacity: 3, occupied: 2, status: 'Available' },
+  { id: 'GF-106', floor: 'GF', roomNumber: '106', gender: 'girls', institution: 'mirai', capacity: 3, occupied: 3, status: 'Full' },
+
+  // First Floor (1F)
+  { id: '1F-201', floor: '1F', roomNumber: '201', gender: 'boys', institution: 'hi-tech', capacity: 2, occupied: 1, status: 'Available' },
+  { id: '1F-202', floor: '1F', roomNumber: '202', gender: 'boys', institution: 'hi-tech', capacity: 2, occupied: 2, status: 'Full' },
+  { id: '1F-203', floor: '1F', roomNumber: '203', gender: 'girls', institution: 'hi-tech', capacity: 2, occupied: 1, status: 'Available' },
+  { id: '1F-204', floor: '1F', roomNumber: '204', gender: 'girls', institution: 'hi-tech', capacity: 2, occupied: 2, status: 'Full' },
+  { id: '1F-205', floor: '1F', roomNumber: '205', gender: 'boys', institution: 'mirai', capacity: 3, occupied: 1, status: 'Available' },
+  { id: '1F-206', floor: '1F', roomNumber: '206', gender: 'girls', institution: 'mirai', capacity: 3, occupied: 2, status: 'Available' }
+];
+
+// Health endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+app.get('/api/auth/google/start', (req, res) => {
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    return res.status(503).json({ message: 'Google OAuth is not configured on the backend.' });
+  }
+
+  const state = crypto.randomBytes(24).toString('hex');
+  const returnTo = typeof req.query.returnTo === 'string'
+    ? req.query.returnTo
+    : process.env.GOOGLE_RETURN_URL || 'http://localhost:3000/login';
+  googleSessions.set(state, { returnTo, createdAt: Date.now() });
+
+  const params = new URLSearchParams({
+    client_id: process.env.GOOGLE_CLIENT_ID,
+    redirect_uri: getGoogleRedirectUri(),
+    response_type: 'code',
+    scope: 'openid email profile',
+    state,
+    access_type: 'offline',
+    prompt: 'select_account'
+  });
+  res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+});
+
+app.get('/api/auth/google/callback', async (req, res) => {
+  const session = googleSessions.get(req.query.state);
+  if (!session || Date.now() - session.createdAt > 10 * 60 * 1000) return res.status(400).send('Google login session expired.');
+  googleSessions.delete(req.query.state);
+  if (req.query.error) return res.redirect(`${session.returnTo}?google_error=${encodeURIComponent(req.query.error)}`);
+
+  try {
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code: req.query.code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: getGoogleRedirectUri(),
+        grant_type: 'authorization_code'
+      })
+    });
+    const tokens = await tokenResponse.json();
+    if (!tokenResponse.ok) throw new Error(tokens.error_description || 'Google token exchange failed');
+
+    const profileResponse = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
+      headers: { Authorization: `Bearer ${tokens.access_token}` }
+    });
+    const profile = await profileResponse.json();
+    if (!profileResponse.ok || !profile.email) throw new Error('Google profile email unavailable');
+
+    const user = {
+      name: profile.name || profile.email.split('@')[0],
+      email: profile.email,
+      picture: profile.picture,
+      role: 'student',
+      provider: 'google',
+      loginTime: new Date().toISOString()
+    };
+    const welcomeEmailSent = await sendWelcomeEmail(user);
+    const loginToken = crypto.randomBytes(32).toString('hex');
+    googleSessions.set(loginToken, { user, welcomeEmailSent, createdAt: Date.now() });
+    res.redirect(`${session.returnTo}${session.returnTo.includes('?') ? '&' : '?'}google_session=${loginToken}`);
+  } catch (error) {
+    res.redirect(`${session.returnTo}${session.returnTo.includes('?') ? '&' : '?'}google_error=${encodeURIComponent(error.message)}`);
+  }
+});
+
+app.get('/api/auth/google/session', (req, res) => {
+  const session = googleSessions.get(req.query.token);
+  if (!session || !session.user) return res.status(401).json({ message: 'Google login session is invalid or expired.' });
+  googleSessions.delete(req.query.token);
+  res.json({ user: session.user, welcomeEmailSent: session.welcomeEmailSent });
+});
+
+// Mock rooms endpoint
+app.get('/api/rooms', (req, res) => {
+  const { gender, floor, institution } = req.query;
+  let filtered = [...sampleRooms];
+  if (gender) {
+    filtered = filtered.filter(r => r.gender.toLowerCase() === gender.toLowerCase());
+  }
+  if (floor) {
+    filtered = filtered.filter(r => r.floor.toUpperCase() === floor.toUpperCase());
+  }
+  if (institution) {
+    filtered = filtered.filter(r => r.institution.toLowerCase() === institution.toLowerCase());
+  }
+  res.json(filtered);
+});
+
+app.get('/api/calendar', (req, res) => {
+  res.json({ ...readCalendarStore(), timeZone: CALENDAR_TIME_ZONE, today: getLocalDateKey() });
+});
+
+app.get('/api/time', (req, res) => {
+  const now = new Date();
+  res.json({
+    timeZone: CALENDAR_TIME_ZONE,
+    date: getLocalDateKey(now),
+    time: new Intl.DateTimeFormat('en-IN', {
+      timeZone: CALENDAR_TIME_ZONE,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    }).format(now),
+    iso: now.toISOString()
+  });
+});
+
+app.get('/api/calendar/menu', (req, res) => {
+  const requestedDate = typeof req.query.date === 'string' ? req.query.date : getLocalDateKey();
+  const store = readCalendarStore();
+  const menu = store.menuByDate[requestedDate] || null;
+  res.json({ date: requestedDate, menu, timeZone: CALENDAR_TIME_ZONE, calendar: store.calendar });
+});
+
+app.post('/api/calendar', (req, res) => {
+  const payload = req.body;
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return res.status(400).json({ message: 'Calendar upload must be a JSON object.' });
+  }
+
+  const existing = readCalendarStore();
+  const menuByDate = payload.menuByDate && typeof payload.menuByDate === 'object' && !Array.isArray(payload.menuByDate)
+    ? payload.menuByDate
+    : existing.menuByDate;
+  const calendar = payload.calendar || payload;
+  const events = Array.isArray(payload.events) ? payload.events : Array.isArray(payload.items) ? payload.items : existing.events;
+  const store = {
+    calendar: { ...calendar, timeZone: CALENDAR_TIME_ZONE },
+    menuByDate,
+    events,
+    timeZone: CALENDAR_TIME_ZONE,
+    updatedAt: new Date().toISOString()
+  };
+  writeCalendarStore(store);
+  res.status(201).json(store);
+});
+
+app.listen(PORT, () => {
+  console.log(`CampusHaven Backend server running on http://localhost:${PORT}`);
+});
+
