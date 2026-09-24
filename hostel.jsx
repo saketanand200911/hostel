@@ -375,6 +375,11 @@ async function handleGoogleRedirectSession() {
     const params = new URLSearchParams(window.location.search);
     const sessionToken = params.get('google_session');
     const googleError = params.get('google_error');
+    if (!sessionToken && !googleError) return;
+
+    const cleanUrl = `${window.location.pathname}${window.location.hash}`;
+    window.history.replaceState({}, document.title, cleanUrl);
+
     if (googleError) showAlert(`Google login failed: ${googleError}`, 'warning');
     if (!sessionToken) return;
 
@@ -384,6 +389,7 @@ async function handleGoogleRedirectSession() {
         if (!res.ok) throw new Error(data.message);
 
         localStorage.setItem('campushaven_user', JSON.stringify(data.user));
+        if (data.token) localStorage.setItem('campushaven_token', data.token);
         showAlert(`Signed in with Google as ${data.user.name}${data.welcomeEmailSent ? '. Welcome email sent.' : '.'}`, 'success');
         navigateTo('home');
     } catch (err) {

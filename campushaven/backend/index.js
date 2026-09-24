@@ -127,6 +127,10 @@ async function upsertGoogleUser(profile) {
       $setOnInsert: {
         identifier,
         role: 'student',
+        institution: 'hi-tech',
+        gender: 'boys',
+        floor: 'GF',
+        roomNumber: '101',
         createdAt: new Date()
       }
     },
@@ -436,7 +440,8 @@ app.get('/api/auth/google/callback', async (req, res) => {
       );
     }
     const loginToken = crypto.randomBytes(32).toString('hex');
-    googleSessions.set(loginToken, { user, welcomeEmailSent, createdAt: Date.now() });
+    const token = await issueAuthToken(database, storedUser);
+    googleSessions.set(loginToken, { user, token, welcomeEmailSent, createdAt: Date.now() });
     res.redirect(`${session.returnTo}${session.returnTo.includes('?') ? '&' : '?'}google_session=${loginToken}`);
   } catch (error) {
     logEvent('ERROR', 'google_oauth_callback_failed', { error: error.message });
@@ -448,7 +453,7 @@ app.get('/api/auth/google/session', (req, res) => {
   const session = googleSessions.get(req.query.token);
   if (!session || !session.user) return res.status(401).json({ message: 'Google login session is invalid or expired.' });
   googleSessions.delete(req.query.token);
-  res.json({ user: session.user, welcomeEmailSent: session.welcomeEmailSent });
+  res.json({ user: session.user, token: session.token, welcomeEmailSent: session.welcomeEmailSent });
 });
 
 // Mock rooms endpoint
