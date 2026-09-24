@@ -14,7 +14,7 @@ export const LoginPage: React.FC = () => {
   const [roomNumber, setRoomNumber] = useState<string>('101');
   const [name, setName] = useState<string>('');
   const [password, setPassword] = useState<string>('••••••••');
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
