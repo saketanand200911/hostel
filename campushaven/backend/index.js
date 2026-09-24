@@ -9,9 +9,38 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 const CALENDAR_TIME_ZONE = 'Asia/Kolkata';
 const googleSessions = new Map();
+const LOG_SINK_NAME = process.env.GOOGLE_LOG_SINK_NAME || 'campushaven-bq-sink';
+const LOG_SINK_DESTINATION = process.env.GOOGLE_LOG_SINK_DESTINATION || '';
 
 app.use(cors());
 app.use(express.json());
+
+function logEvent(severity, message, metadata = {}) {
+  console.log(JSON.stringify({
+    severity,
+    message,
+    service: 'campushaven-backend',
+    timestamp: new Date().toISOString(),
+    ...metadata
+  }));
+}
+
+app.use((req, res, next) => {
+  const startedAt = Date.now();
+  res.on('finish', () => {
+    const severity = res.statusCode >= 500 ? 'ERROR' : res.statusCode >= 400 ? 'WARNING' : 'INFO';
+    logEvent(severity, 'http_request', {
+      httpRequest: {
+        requestMethod: req.method,
+        requestUrl: `${req.protocol}://${req.get('host')}${req.path}`,
+        status: res.statusCode,
+        latency: `${Date.now() - startedAt}ms`,
+        userAgent: req.get('user-agent')
+      }
+    });
+  });
+  next();
+});
 
 const calendarStorePath = path.join(__dirname, 'calendar-data.json');
 const defaultCalendarStore = {
@@ -96,6 +125,7 @@ app.get('/api/health', (req, res) => {
 
 app.get('/api/auth/google/start', (req, res) => {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    logEvent('ERROR', 'google_oauth_not_configured');
     return res.status(503).json({ message: 'Google OAuth is not configured on the backend.' });
   }
 
@@ -114,6 +144,7 @@ app.get('/api/auth/google/start', (req, res) => {
     access_type: 'offline',
     prompt: 'select_account'
   });
+  logEvent('INFO', 'google_oauth_started');
   res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
 });
 
@@ -157,6 +188,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
     googleSessions.set(loginToken, { user, welcomeEmailSent, createdAt: Date.now() });
     res.redirect(`${session.returnTo}${session.returnTo.includes('?') ? '&' : '?'}google_session=${loginToken}`);
   } catch (error) {
+    logEvent('ERROR', 'google_oauth_callback_failed', { error: error.message });
     res.redirect(`${session.returnTo}${session.returnTo.includes('?') ? '&' : '?'}google_error=${encodeURIComponent(error.message)}`);
   }
 });
@@ -235,6 +267,12 @@ app.post('/api/calendar', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`CampusHaven Backend server running on http://localhost:${PORT}`);
+  logEvent('INFO', 'server_started', {
+    port: PORT,
+    loggingSink: {
+      name: LOG_SINK_NAME,
+      destination: LOG_SINK_DESTINATION || undefined
+    }
+  });
 });
 
