@@ -1,6 +1,6 @@
 const API_BASE_URL = window.location.protocol === 'file:'
     ? 'http://localhost:4000/api'
-    : window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
+    : ['localhost', '127.0.0.1'].includes(window.location.hostname) ? 'http://localhost:4000/api' : '/api';
 const APP_TIME_ZONE = 'Asia/Kolkata';
 
 function getLocalDateKey(date = new Date()) {

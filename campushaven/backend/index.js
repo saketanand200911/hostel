@@ -83,7 +83,10 @@ function getGoogleReturnUrl(candidate) {
   try {
     const requested = new URL(candidate);
     const configured = new URL(fallback);
-    if (requested.origin !== configured.origin || requested.pathname !== configured.pathname) return fallback;
+    const isLocalFrontend = ['localhost', '127.0.0.1'].includes(requested.hostname)
+      && requested.port === '5500'
+      && requested.pathname === '/login';
+    if ((!isLocalFrontend && requested.origin !== configured.origin) || requested.pathname !== configured.pathname) return fallback;
     return requested.toString();
   } catch {
     return fallback;
