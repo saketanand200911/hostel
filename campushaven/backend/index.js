@@ -123,7 +123,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.get('/api/auth/google/start', (req, res) => {
+app.get(['/api/auth/google/start', '/api/auth/google'], (req, res) => {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     logEvent('ERROR', 'google_oauth_not_configured');
     return res.status(503).json({ message: 'Google OAuth is not configured on the backend.' });
