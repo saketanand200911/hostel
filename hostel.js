@@ -37,6 +37,7 @@ let currentInstitution = localStorage.getItem('campushaven_institution') || 'hi-
 let currentView = 'home';
 let currentLoginRole = 'student';
 let currentAuthMode = 'signin'; // 'signin' or 'signup'
+let menuRefreshTimer;
 
 function applyThemeColors(gender) {
     const p = PALETTES[gender];
@@ -131,14 +132,14 @@ async function loadDateMenu() {
         const response = await fetch(`${API_BASE_URL}/calendar/menu?date=${date}`);
         if (!response.ok) return;
         const result = await response.json();
-        if (!result.menu) return;
         ['breakfast', 'lunch', 'snacks', 'dinner'].forEach(meal => {
             const list = document.getElementById(`menu-${meal}`);
-            const value = result.menu[meal];
-            if (list && value) {
-                const items = Array.isArray(value) ? value : [value];
-                list.innerHTML = items.map(item => `<li>• ${String(item)}</li>`).join('');
-            }
+            if (!list) return;
+            const value = result.menu?.[meal];
+            const items = Array.isArray(value) ? value : value ? [value] : [];
+            list.innerHTML = items.length
+                ? items.map(item => `<li>• ${String(item)}</li>`).join('')
+                : '<li class="text-slate-400">No menu uploaded for this meal.</li>';
         });
         updateMealStatuses();
     } catch (error) {
@@ -564,4 +565,8 @@ document.addEventListener('DOMContentLoaded', () => {
     renderNavAuth();
     handleGoogleRedirectSession();
     navigateTo('home');
+    menuRefreshTimer = window.setInterval(() => loadDateMenu(), 60 * 1000);
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) loadDateMenu();
+    });
 });
