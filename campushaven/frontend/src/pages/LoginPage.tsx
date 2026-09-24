@@ -5,6 +5,63 @@ import { Gender, Institution } from '../theme';
 
 type Role = 'student' | 'warden' | 'admin';
 
+type DemoProfile = {
+  label: string;
+  role: Role;
+  identifier: string;
+  password: string;
+  name: string;
+  institution: Institution;
+  gender: Gender;
+  floor?: 'GF' | '1F';
+  roomNumber?: string;
+};
+
+const quickDemoProfiles: DemoProfile[] = [
+  {
+    label: 'Alex Chen',
+    role: 'student',
+    identifier: 'alex@student.hi-tech.edu',
+    password: 'student123',
+    name: 'Alex Chen',
+    institution: 'hi-tech',
+    gender: 'boys',
+    floor: 'GF',
+    roomNumber: '101',
+  },
+  {
+    label: 'Priya Nair',
+    role: 'student',
+    identifier: 'priya@student.hi-tech.edu',
+    password: 'student123',
+    name: 'Priya Nair',
+    institution: 'hi-tech',
+    gender: 'girls',
+    floor: '1F',
+    roomNumber: '203',
+  },
+  {
+    label: 'Rohan Mehta',
+    role: 'warden',
+    identifier: 'warden@hi-tech.edu',
+    password: 'warden123',
+    name: 'Rohan Mehta',
+    institution: 'hi-tech',
+    gender: 'boys',
+  },
+  {
+    label: 'Neha Rao',
+    role: 'student',
+    identifier: 'neha@student.mirai.edu',
+    password: 'student123',
+    name: 'Neha Rao',
+    institution: 'mirai',
+    gender: 'girls',
+    floor: 'GF',
+    roomNumber: '104',
+  },
+];
+
 export const LoginPage: React.FC = () => {
   const { institution, setInstitution, gender, setGender } = useTheme();
   const navigate = useNavigate();
@@ -67,6 +124,17 @@ export const LoginPage: React.FC = () => {
     window.location.assign(`${apiBaseUrl}/auth/google/start?returnTo=${encodeURIComponent(returnTo)}`);
   };
 
+  const applyDemoProfile = (profile: DemoProfile) => {
+    setRole(profile.role);
+    setIdentifier(profile.identifier);
+    setPassword(profile.password);
+    setInstitution(profile.institution);
+    setGender(profile.gender);
+    if (profile.floor) setFloor(profile.floor);
+    if (profile.roomNumber) setRoomNumber(profile.roomNumber);
+    setSignupName(profile.name);
+  };
+
   const handleSignup = async () => {
     const signupIdentifier = signupEmail.trim() || signupPhone.trim();
     if (!signupIdentifier || !signupName.trim() || signupPassword.length < 8) {
@@ -119,6 +187,30 @@ export const LoginPage: React.FC = () => {
           <p className="text-xs sm:text-sm text-slate-600 font-hand mt-1">
             ✍️ Please enter credentials or select a quick demo profile below
           </p>
+        </div>
+
+        {/* Demo profiles for quick testing */}
+        <div className="mb-6 bg-[var(--paper)] sketch-box p-3.5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-[var(--ink)] uppercase tracking-wider font-mono-draft">
+              🧪 Quick Demo Users
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {quickDemoProfiles.map((profile) => (
+              <button
+                key={profile.label}
+                type="button"
+                onClick={() => applyDemoProfile(profile)}
+                className="text-left px-2.5 py-2 rounded-lg border border-[var(--sketch-border)] bg-white hover:bg-[var(--accent)]/20 transition-colors"
+              >
+                <div className="text-xs font-bold text-[var(--ink)]">{profile.label}</div>
+                <div className="text-[10px] text-slate-600 uppercase tracking-wide font-mono-draft">
+                  {profile.role} • {profile.identifier}
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Sign-up fields (email / phone) and Google login */}
