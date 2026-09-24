@@ -20,11 +20,11 @@ CampusHaven is a student hostel management website for residents, wardens, and a
 
 The directly openable website is made from three connected files:
 
-- `hostel.html` contains the page structure and content.
+- `index.html` contains the page structure and content.
 - `hostel.css` contains the custom styling and themes.
-- `hostel.jsx` contains the browser JavaScript for navigation, login, menus, QR passes, modals, and API calls.
+- `hostel.js` contains the browser JavaScript for navigation, login, menus, QR passes, modals, and API calls.
 
-Open `hostel.html` directly in a browser for the standalone experience. The standalone page uses the backend at `http://localhost:4000/api` when opened as a local file.
+Open `index.html` directly in a browser for the standalone experience. The standalone page uses the backend at `http://localhost:4000/api` when opened as a local file.
 
 ## React Frontend
 
