@@ -98,8 +98,16 @@ Example menu upload:
 			"snacks": ["Aloo Samosa", "Imli Chutney"],
 			"dinner": ["Chapathi", "Achari Seasonal Veg", "Gulab Jamun"]
 		}
+	},
+	"menuByDay": {
+		"Friday": {
+			"breakfast": ["Poha", "Tea"],
+			"lunch": ["Chapathi", "Dal", "Rice"],
+			"snacks": ["Samosa"],
+			"dinner": ["Roti", "Seasonal Vegetable"]
+		}
 	}
 }
 ```
 
-All menu date keys and displayed meal times use GMT+5:30 through the `Asia/Kolkata` timezone.
+Exact `menuByDate` entries take priority; otherwise the matching `menuByDay` entry is used. All menu date keys and displayed meal times use GMT+5:30 through the `Asia/Kolkata` timezone.

@@ -107,7 +107,7 @@ async function uploadCalendarFile(input) {
             body: JSON.stringify(payload)
         });
         if (!response.ok) throw new Error('Upload failed');
-        status.textContent = 'Calendar saved. Date-specific menus will load automatically.';
+        status.textContent = 'Calendar saved. Menus will update automatically by date or weekday.';
         await loadDateMenu();
     } catch (error) {
         status.textContent = 'Upload a valid calendar JSON file.';
