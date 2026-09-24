@@ -1,22 +1,30 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './components/ThemeProvider';
 import { StickyNav } from './components/StickyNav';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { StudentPortal } from './pages/StudentPortal';
 import { AdminConsole } from './pages/AdminConsole';
 import { HelpDeskPage, NoticesPage, WeeklyTimetable } from './pages/StudentPages';
 
 export const App: React.FC = () => {
+  const location = useLocation();
+  const storedUser = localStorage.getItem('campushaven_user');
+  let authUser = null;
+  try {
+    authUser = storedUser ? JSON.parse(storedUser) : null;
+  } catch {
+    localStorage.removeItem('campushaven_user');
+  }
+
   return (
     <ThemeProvider>
       <div className="min-h-screen overflow-y-auto bg-[var(--primary)] transition-colors duration-300 flex flex-col">
-        <StickyNav />
+        {authUser && location.pathname !== '/login' && <StickyNav />}
         <div className="flex-1">
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<Navigate to={authUser ? (authUser.role === 'student' ? '/student' : '/admin') : '/login'} replace />} />
             <Route path="/login" element={<LoginPage />} />
             <Route
               path="/student"

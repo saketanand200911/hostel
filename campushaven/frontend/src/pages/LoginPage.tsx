@@ -12,8 +12,13 @@ export const LoginPage: React.FC = () => {
   const [role, setRole] = useState<Role>('student');
   const [floor, setFloor] = useState<'GF' | '1F'>('GF');
   const [roomNumber, setRoomNumber] = useState<string>('101');
-  const [name, setName] = useState<string>('');
-  const [password, setPassword] = useState<string>('••••••••');
+  const [identifier, setIdentifier] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupPhone, setSignupPhone] = useState('');
+  const [signupName, setSignupName] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
 
   useEffect(() => {
@@ -33,47 +38,65 @@ export const LoginPage: React.FC = () => {
       .catch(() => alert('Google login session could not be completed.'));
   }, [apiBaseUrl, navigate]);
 
-  const handleLogin = (
-    loginRole: Role = role,
-    customData?: {
-      name: string;
-      institution: Institution;
-      gender: Gender;
-      floor?: 'GF' | '1F';
-      roomNumber?: string;
-    }
-  ) => {
-    const activeInstitution = customData?.institution || institution;
-    const activeGender = customData?.gender || gender;
-    const activeFloor = customData?.floor || floor;
-    const activeRoom = customData?.roomNumber || roomNumber;
-    const activeName = customData?.name || name || (loginRole === 'student' ? 'Resident Student' : loginRole === 'warden' ? 'Chief Warden' : 'Campus Administrator');
-
-    setInstitution(activeInstitution);
-    setGender(activeGender);
-
-    const authObject = {
-      name: activeName,
-      role: loginRole,
-      institution: activeInstitution,
-      gender: activeGender,
-      floor: loginRole === 'student' ? activeFloor : undefined,
-      roomNumber: loginRole === 'student' ? activeRoom : undefined,
-      loginTime: new Date().toISOString(),
-    };
-
-    localStorage.setItem('campushaven_user', JSON.stringify(authObject));
-
-    if (loginRole === 'student') {
-      navigate('/student');
-    } else {
-      navigate('/admin');
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`${apiBaseUrl}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, password }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Login failed.');
+      if (data.welcomeEmailSent) alert(`Welcome, ${data.user.name}! A welcome email was sent to ${data.user.email}.`);
+      localStorage.setItem('campushaven_user', JSON.stringify(data.user));
+      if (data.token) localStorage.setItem('campushaven_token', data.token);
+      setInstitution(data.user.institution);
+      setGender(data.user.gender);
+      navigate(data.user.role === 'student' ? '/student' : '/admin');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Login failed.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleGoogleLogin = () => {
     const returnTo = `${window.location.origin}/login`;
     window.location.assign(`${apiBaseUrl}/auth/google/start?returnTo=${encodeURIComponent(returnTo)}`);
+  };
+
+  const handleSignup = async () => {
+    const signupIdentifier = signupEmail.trim() || signupPhone.trim();
+    if (!signupIdentifier || !signupName.trim() || signupPassword.length < 8) {
+      alert('Enter a name, email or phone number, and a password of at least 8 characters.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identifier: signupIdentifier,
+          password: signupPassword,
+          name: signupName,
+          institution,
+          gender,
+          floor,
+          roomNumber,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Sign-up failed.');
+      if (data.welcomeEmailSent) alert(`Welcome, ${data.user.name}! A welcome email was sent to ${data.user.email}.`);
+      localStorage.setItem('campushaven_user', JSON.stringify(data.user));
+      if (data.token) localStorage.setItem('campushaven_token', data.token);
+      navigate('/student');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Sign-up failed.');
+    }
   };
 
   return (
@@ -109,16 +132,35 @@ export const LoginPage: React.FC = () => {
             <input
               type="email"
               placeholder="Email address"
+              value={signupEmail}
+              onChange={(e) => setSignupEmail(e.target.value)}
               className="w-full sketch-input px-3 py-2 text-sm font-bold"
             />
             <input
               type="tel"
               placeholder="Phone number"
+              value={signupPhone}
+              onChange={(e) => setSignupPhone(e.target.value)}
+              className="w-full sketch-input px-3 py-2 text-sm font-bold"
+            />
+            <input
+              type="text"
+              placeholder="Full name"
+              value={signupName}
+              onChange={(e) => setSignupName(e.target.value)}
+              className="w-full sketch-input px-3 py-2 text-sm font-bold"
+            />
+            <input
+              type="password"
+              placeholder="Password (8+ characters)"
+              value={signupPassword}
+              onChange={(e) => setSignupPassword(e.target.value)}
+              minLength={8}
               className="w-full sketch-input px-3 py-2 text-sm font-bold"
             />
             <button
               type="button"
-              onClick={() => alert('Sign‑up not implemented')}
+              onClick={handleSignup}
               className="w-full py-2 sketch-btn bg-white hover:bg-gray-50 text-[var(--ink)] font-bold"
             >
               Sign Up
@@ -152,8 +194,7 @@ export const LoginPage: React.FC = () => {
 
         <form
           onSubmit={(e) => {
-            e.preventDefault();
-            handleLogin();
+            handleLogin(e);
           }}
           className="space-y-4 font-hand text-sm"
         >
@@ -222,13 +263,13 @@ export const LoginPage: React.FC = () => {
           {/* Name/ID */}
           <div>
             <label className="block text-xs font-bold text-[var(--ink)] mb-1 font-draft">
-              {role === 'student' ? 'Student Full Name / ID' : 'Staff Name / Designation'}
+              Email or Phone Number
             </label>
             <input
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={role === 'student' ? 'e.g. Alex Chen' : 'e.g. Govind'}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder="e.g. alex@example.com or +91..."
               className="w-full sketch-input px-3 py-2 text-sm font-bold"
             />
           </div>
@@ -242,6 +283,7 @@ export const LoginPage: React.FC = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              minLength={8}
               required
               className="w-full sketch-input px-3 py-2 text-sm font-bold tracking-widest font-mono-draft"
             />
@@ -253,7 +295,7 @@ export const LoginPage: React.FC = () => {
             style={{ backgroundColor: 'var(--accent)', color: '#0f172a' }}
             className="w-full py-3 text-base font-bold sketch-btn shadow-md mt-6"
           >
-            ✓ Enter {role === 'student' ? 'Student Resident Portal' : 'Admin Console'}
+            {isSubmitting ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
       </div>

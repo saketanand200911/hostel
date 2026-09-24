@@ -112,6 +112,7 @@ async function issueAuthToken(database, user) {
 async function upsertGoogleUser(profile) {
   const database = await requireMongo();
   const identifier = normalizeIdentifier(profile.email);
+  const existing = await database.collection('users').findOne({ identifier });
   await database.collection('users').updateOne(
     { identifier },
     {
@@ -131,7 +132,10 @@ async function upsertGoogleUser(profile) {
     },
     { upsert: true }
   );
-  return database.collection('users').findOne({ identifier });
+  return {
+    user: await database.collection('users').findOne({ identifier }),
+    isFirstLogin: !existing
+  };
 }
 
 async function initializeMongo() {
@@ -206,8 +210,8 @@ function getGoogleReturnUrl(candidate) {
     const configured = new URL(fallback);
     const isLocalFrontend = ['localhost', '127.0.0.1'].includes(requested.hostname)
       && requested.port === '5500'
-      && requested.pathname === '/login';
-    if ((!isLocalFrontend && requested.origin !== configured.origin) || requested.pathname !== configured.pathname) return fallback;
+      && ['/login', '/hostel.html'].includes(requested.pathname);
+    if (!isLocalFrontend && (requested.origin !== configured.origin || requested.pathname !== configured.pathname)) return fallback;
     return requested.toString();
   } catch {
     return fallback;
@@ -254,6 +258,7 @@ function getMailTransport() {
 }
 
 async function sendWelcomeEmail(user) {
+  if (!user?.email) return false;
   const transport = getMailTransport();
   if (!transport) return false;
   await transport.sendMail({
@@ -321,10 +326,23 @@ app.post('/api/auth/signup', async (req, res) => {
       updatedAt: now,
       lastLoginAt: now
     };
-    const result = await users.insertOne(user);
+    let result;
+    try {
+      result = await users.insertOne(user);
+    } catch (error) {
+      if (error.code === 11000) {
+        return res.status(409).json({ message: 'An account already exists for this email or phone number.' });
+      }
+      throw error;
+    }
     user._id = result.insertedId;
+    const welcomeEmailSent = await sendWelcomeEmail(user);
+    if (welcomeEmailSent) {
+      user.welcomeEmailSentAt = new Date();
+      await users.updateOne({ _id: user._id }, { $set: { welcomeEmailSentAt: user.welcomeEmailSentAt } });
+    }
     const token = await issueAuthToken(database, user);
-    res.status(201).json({ user: toPublicUser(user), token });
+    res.status(201).json({ user: toPublicUser(user), token, welcomeEmailSent });
   } catch (error) {
     logEvent('ERROR', 'signup_failed', { error: error.message });
     res.status(error.code === 'MONGODB_UNAVAILABLE' ? 503 : 500).json({ message: error.message });
@@ -345,9 +363,14 @@ app.post('/api/auth/login', async (req, res) => {
     if (!user || !user.passwordHash || !(await verifyPassword(password, user.passwordHash))) {
       return res.status(401).json({ message: 'Invalid email/phone or password.' });
     }
+    const isFirstLogin = !user.welcomeEmailSentAt;
     await users.updateOne({ _id: user._id }, { $set: { lastLoginAt: new Date() } });
+    const welcomeEmailSent = isFirstLogin && await sendWelcomeEmail(user);
+    if (welcomeEmailSent) {
+      await users.updateOne({ _id: user._id }, { $set: { welcomeEmailSentAt: new Date() } });
+    }
     const token = await issueAuthToken(database, user);
-    res.json({ user: toPublicUser(user), token });
+    res.json({ user: toPublicUser(user), token, welcomeEmailSent });
   } catch (error) {
     logEvent('ERROR', 'login_failed', { error: error.message });
     res.status(error.code === 'MONGODB_UNAVAILABLE' ? 503 : 500).json({ message: error.message });
@@ -402,9 +425,16 @@ app.get('/api/auth/google/callback', async (req, res) => {
     const profile = await profileResponse.json();
     if (!profileResponse.ok || !profile.email) throw new Error('Google profile email unavailable');
 
-    const storedUser = await upsertGoogleUser(profile);
+    const { user: storedUser, isFirstLogin } = await upsertGoogleUser(profile);
     const user = toPublicUser(storedUser);
-    const welcomeEmailSent = await sendWelcomeEmail(user);
+    const welcomeEmailSent = (isFirstLogin || !storedUser.welcomeEmailSentAt) && await sendWelcomeEmail(user);
+    if (welcomeEmailSent) {
+      const database = await requireMongo();
+      await database.collection('users').updateOne(
+        { _id: storedUser._id },
+        { $set: { welcomeEmailSentAt: new Date() } }
+      );
+    }
     const loginToken = crypto.randomBytes(32).toString('hex');
     googleSessions.set(loginToken, { user, welcomeEmailSent, createdAt: Date.now() });
     res.redirect(`${session.returnTo}${session.returnTo.includes('?') ? '&' : '?'}google_session=${loginToken}`);
