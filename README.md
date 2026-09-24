@@ -54,6 +54,29 @@ npm start
 
 The server runs on `http://localhost:4000` by default.
 
+### Google Login and Welcome Email
+
+Google login uses the backend OAuth callback at:
+
+`http://localhost:4000/api/auth/google/callback`
+
+Create a Google OAuth web client and add that callback URL to its authorized redirect URIs. Start the backend with these environment variables:
+
+```bash
+export GOOGLE_CLIENT_ID="your-google-client-id"
+export GOOGLE_CLIENT_SECRET="your-google-client-secret"
+export GOOGLE_REDIRECT_URI="http://localhost:4000/api/auth/google/callback"
+export GOOGLE_RETURN_URL="http://localhost:3000/login"
+export SMTP_HOST="smtp.example.com"
+export SMTP_PORT="587"
+export SMTP_USER="your-smtp-user"
+export SMTP_PASS="your-smtp-password"
+export SMTP_FROM="CampusHaven <no-reply@example.com>"
+npm start
+```
+
+After the user approves Google access, the backend verifies the Google profile, creates a one-time login session, and sends a welcome email to the verified Google email address. `SMTP_SECURE=true` can be used for SMTP providers that require TLS from connection start. Without Google or SMTP variables, the UI reports that the service is not configured rather than pretending a login or email succeeded.
+
 ## Calendar and Menu API
 
 Useful endpoints:
