@@ -3,12 +3,13 @@ const API_BASE_URL = (() => {
     if (configured) return configured;
     if (window.location.protocol === 'file:') return 'http://localhost:4000/api';
     if (['localhost', '127.0.0.1'].includes(window.location.hostname)) return 'http://localhost:4000/api';
+    if (window.location.hostname.endsWith('github.io')) return '';
     return '/api';
 })();
 const APP_TIME_ZONE = 'Asia/Kolkata';
 
 function backendIsAvailable() {
-    return window.location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(window.location.hostname) || !!(window.CAMPUSHAVEN_API_BASE && String(window.CAMPUSHAVEN_API_BASE).trim());
+    return !!API_BASE_URL;
 }
 
 function getLocalDateKey(date = new Date()) {
@@ -372,7 +373,7 @@ async function handleAuthSubmit(e) {
 // Google OAuth Handler
 function triggerGoogleAuth() {
     if (!backendIsAvailable()) {
-        showAlert('Google login needs a live backend. For GitHub Pages, deploy the backend separately or use the email/phone sign-in flow.', 'warning');
+        showAlert('Google login needs a live backend. GitHub Pages is static, so deploy the backend separately or use the email/phone sign-in flow instead.', 'warning');
         return;
     }
 
