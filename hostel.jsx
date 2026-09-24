@@ -364,9 +364,9 @@ async function handleAuthSubmit(e) {
 // Google OAuth Handler
 function triggerGoogleAuth() {
     const returnTo = window.location.protocol === 'file:'
-        ? 'http://localhost:5500/hostel.html'
+        ? 'http://localhost:5501/hostel.html'
         : ['localhost', '127.0.0.1'].includes(window.location.hostname)
-            ? 'http://localhost:5500/hostel.html'
+            ? 'http://localhost:5501/hostel.html'
             : window.location.href.split('?')[0];
     window.location.assign(`${API_BASE_URL}/auth/google/start?returnTo=${encodeURIComponent(returnTo)}`);
 }
