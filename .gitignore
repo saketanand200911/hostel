@@ -1,6 +1,10 @@
 .DS_Store
 .vscode/
-
-
 main/
 output/
+.env
+campushaven/
+node_modules/
+package-lock.json
+package.json
+playground-5.mongodb.js
