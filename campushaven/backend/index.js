@@ -1,9 +1,13 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { promisify } = require('util');
 const nodemailer = require('nodemailer');
+const { MongoClient } = require('mongodb');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -11,6 +15,11 @@ const CALENDAR_TIME_ZONE = 'Asia/Kolkata';
 const googleSessions = new Map();
 const LOG_SINK_NAME = process.env.GOOGLE_LOG_SINK_NAME || 'campushaven-bq-sink';
 const LOG_SINK_DESTINATION = process.env.GOOGLE_LOG_SINK_DESTINATION || '';
+const MONGODB_URI = process.env.MONGODB_URI || '';
+const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME || 'campushaven';
+const scryptAsync = promisify(crypto.scrypt);
+let mongoDb;
+let mongoConnectionPromise;
 
 app.use(cors());
 app.use(express.json());
@@ -23,6 +32,115 @@ function logEvent(severity, message, metadata = {}) {
     timestamp: new Date().toISOString(),
     ...metadata
   }));
+}
+
+async function connectMongo() {
+  if (!MONGODB_URI) return null;
+  if (mongoDb) return mongoDb;
+  if (!mongoConnectionPromise) {
+    mongoConnectionPromise = MongoClient.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000
+    }).then(client => {
+      mongoDb = client.db(MONGODB_DB_NAME);
+      logEvent('INFO', 'mongodb_connected', { database: MONGODB_DB_NAME });
+      return mongoDb;
+    }).catch(error => {
+      mongoConnectionPromise = null;
+      logEvent('ERROR', 'mongodb_connection_failed', { error: error.message });
+      return null;
+    });
+  }
+  return mongoConnectionPromise;
+}
+
+async function requireMongo() {
+  const database = await connectMongo();
+  if (!database) {
+    const error = new Error('MongoDB is not configured or unavailable. Set MONGODB_URI to your cluster0 connection string.');
+    error.code = 'MONGODB_UNAVAILABLE';
+    throw error;
+  }
+  return database;
+}
+
+function normalizeIdentifier(identifier) {
+  return String(identifier || '').trim().toLowerCase();
+}
+
+async function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const derivedKey = await scryptAsync(password, salt, 64);
+  return `${salt}:${derivedKey.toString('hex')}`;
+}
+
+async function verifyPassword(password, storedHash) {
+  const [salt, expectedHex] = String(storedHash || '').split(':');
+  if (!salt || !expectedHex) return false;
+  const actual = await scryptAsync(password, salt, 64);
+  const expected = Buffer.from(expectedHex, 'hex');
+  return expected.length === actual.length && crypto.timingSafeEqual(actual, expected);
+}
+
+function toPublicUser(user) {
+  if (!user) return null;
+  return {
+    id: user._id?.toString(),
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    contact: user.identifier,
+    role: user.role,
+    provider: user.provider,
+    institution: user.institution,
+    gender: user.gender,
+    floor: user.floor,
+    roomNumber: user.roomNumber,
+    picture: user.picture
+  };
+}
+
+async function issueAuthToken(database, user) {
+  const token = crypto.randomBytes(32).toString('hex');
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  await database.collection('authSessions').insertOne({
+    tokenHash,
+    userId: user._id,
+    createdAt: new Date(),
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+  });
+  return token;
+}
+
+async function upsertGoogleUser(profile) {
+  const database = await requireMongo();
+  const identifier = normalizeIdentifier(profile.email);
+  await database.collection('users').updateOne(
+    { identifier },
+    {
+      $set: {
+        name: profile.name || profile.email.split('@')[0],
+        email: identifier,
+        picture: profile.picture,
+        provider: 'google',
+        updatedAt: new Date(),
+        lastLoginAt: new Date()
+      },
+      $setOnInsert: {
+        identifier,
+        role: 'student',
+        createdAt: new Date()
+      }
+    },
+    { upsert: true }
+  );
+  return database.collection('users').findOne({ identifier });
+}
+
+async function initializeMongo() {
+  const database = await connectMongo();
+  if (!database) return;
+  await database.collection('users').createIndex({ identifier: 1 }, { unique: true });
+  await database.collection('authSessions').createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 }
 
 app.use((req, res, next) => {
@@ -165,8 +283,72 @@ const sampleRooms = [
 ];
 
 // Health endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
+app.get('/api/health', async (req, res) => {
+  const database = await connectMongo();
+  res.json({ status: 'ok', mongodb: database ? 'connected' : 'unavailable' });
+});
+
+app.post('/api/auth/signup', async (req, res) => {
+  const { identifier, password, name, institution, gender, floor, roomNumber } = req.body || {};
+  const normalizedIdentifier = normalizeIdentifier(identifier);
+  if (!normalizedIdentifier || typeof password !== 'string' || password.length < 8 || !name) {
+    return res.status(400).json({ message: 'Name, email or phone, and a password of at least 8 characters are required.' });
+  }
+
+  try {
+    const database = await requireMongo();
+    const users = database.collection('users');
+    const existing = await users.findOne({ identifier: normalizedIdentifier });
+    if (existing) return res.status(409).json({ message: 'An account already exists for this email or phone number.' });
+
+    const isEmail = normalizedIdentifier.includes('@');
+    const now = new Date();
+    const user = {
+      identifier: normalizedIdentifier,
+      ...(isEmail ? { email: normalizedIdentifier } : { phone: normalizedIdentifier }),
+      passwordHash: await hashPassword(password),
+      name: String(name).trim(),
+      role: 'student',
+      provider: 'password',
+      institution: institution || 'hi-tech',
+      gender: gender || 'boys',
+      floor: floor || 'GF',
+      roomNumber: String(roomNumber || '101').trim(),
+      createdAt: now,
+      updatedAt: now,
+      lastLoginAt: now
+    };
+    const result = await users.insertOne(user);
+    user._id = result.insertedId;
+    const token = await issueAuthToken(database, user);
+    res.status(201).json({ user: toPublicUser(user), token });
+  } catch (error) {
+    logEvent('ERROR', 'signup_failed', { error: error.message });
+    res.status(error.code === 'MONGODB_UNAVAILABLE' ? 503 : 500).json({ message: error.message });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  const { identifier, password } = req.body || {};
+  const normalizedIdentifier = normalizeIdentifier(identifier);
+  if (!normalizedIdentifier || typeof password !== 'string') {
+    return res.status(400).json({ message: 'Email or phone and password are required.' });
+  }
+
+  try {
+    const database = await requireMongo();
+    const users = database.collection('users');
+    const user = await users.findOne({ identifier: normalizedIdentifier });
+    if (!user || !user.passwordHash || !(await verifyPassword(password, user.passwordHash))) {
+      return res.status(401).json({ message: 'Invalid email/phone or password.' });
+    }
+    await users.updateOne({ _id: user._id }, { $set: { lastLoginAt: new Date() } });
+    const token = await issueAuthToken(database, user);
+    res.json({ user: toPublicUser(user), token });
+  } catch (error) {
+    logEvent('ERROR', 'login_failed', { error: error.message });
+    res.status(error.code === 'MONGODB_UNAVAILABLE' ? 503 : 500).json({ message: error.message });
+  }
 });
 
 app.get(['/api/auth/google/start', '/api/auth/google'], (req, res) => {
@@ -217,14 +399,8 @@ app.get('/api/auth/google/callback', async (req, res) => {
     const profile = await profileResponse.json();
     if (!profileResponse.ok || !profile.email) throw new Error('Google profile email unavailable');
 
-    const user = {
-      name: profile.name || profile.email.split('@')[0],
-      email: profile.email,
-      picture: profile.picture,
-      role: 'student',
-      provider: 'google',
-      loginTime: new Date().toISOString()
-    };
+    const storedUser = await upsertGoogleUser(profile);
+    const user = toPublicUser(storedUser);
     const welcomeEmailSent = await sendWelcomeEmail(user);
     const loginToken = crypto.randomBytes(32).toString('hex');
     googleSessions.set(loginToken, { user, welcomeEmailSent, createdAt: Date.now() });
@@ -306,6 +482,10 @@ app.post('/api/calendar', (req, res) => {
   };
   writeCalendarStore(store);
   res.status(201).json(store);
+});
+
+initializeMongo().catch(error => {
+  logEvent('ERROR', 'mongodb_initialization_failed', { error: error.message });
 });
 
 app.listen(PORT, () => {

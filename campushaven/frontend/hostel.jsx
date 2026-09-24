@@ -340,6 +340,10 @@ async function handleAuthSubmit(e) {
         showAlert(`Welcome, ${data.user.name}!`, 'success');
         navigateTo(data.user.role === 'student' ? 'home' : 'admin');
     } catch (err) {
+        if (!(err instanceof TypeError)) {
+            showAlert(err.message || 'Authentication failed. Please try again.', 'warning');
+            return;
+        }
         // Fallback local login for offline testing if backend API is not running
         console.warn('API connection failed, falling back to local state:', err.message);
         const localUser = {
