@@ -2,8 +2,6 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
 const crypto = require('crypto');
 const { promisify } = require('util');
 const nodemailer = require('nodemailer');
@@ -160,7 +158,7 @@ app.use((req, res, next) => {
   next();
 });
 
-const calendarStorePath = path.join(__dirname, 'calendar-data.json');
+const CALENDAR_DOCUMENT_ID = 'campushaven-calendar';
 const defaultCalendarStore = {
   calendar: null,
   menuByDate: {},
@@ -169,16 +167,21 @@ const defaultCalendarStore = {
   updatedAt: null
 };
 
-function readCalendarStore() {
-  try {
-    return { ...defaultCalendarStore, ...JSON.parse(fs.readFileSync(calendarStorePath, 'utf8')) };
-  } catch {
-    return { ...defaultCalendarStore };
-  }
+async function readCalendarStore() {
+  const database = await requireMongo();
+  const stored = await database.collection('calendar').findOne({ _id: CALENDAR_DOCUMENT_ID });
+  if (!stored) return { ...defaultCalendarStore };
+  const { _id, ...calendarStore } = stored;
+  return { ...defaultCalendarStore, ...calendarStore };
 }
 
-function writeCalendarStore(store) {
-  fs.writeFileSync(calendarStorePath, JSON.stringify(store, null, 2));
+async function writeCalendarStore(store) {
+  const database = await requireMongo();
+  await database.collection('calendar').replaceOne(
+    { _id: CALENDAR_DOCUMENT_ID },
+    { _id: CALENDAR_DOCUMENT_ID, ...store },
+    { upsert: true }
+  );
 }
 
 function getLocalDateKey(date = new Date()) {
@@ -434,8 +437,12 @@ app.get('/api/rooms', (req, res) => {
   res.json(filtered);
 });
 
-app.get('/api/calendar', (req, res) => {
-  res.json({ ...readCalendarStore(), timeZone: CALENDAR_TIME_ZONE, today: getLocalDateKey() });
+app.get('/api/calendar', async (req, res) => {
+  try {
+    res.json({ ...await readCalendarStore(), timeZone: CALENDAR_TIME_ZONE, today: getLocalDateKey() });
+  } catch (error) {
+    res.status(error.code === 'MONGODB_UNAVAILABLE' ? 503 : 500).json({ message: error.message });
+  }
 });
 
 app.get('/api/time', (req, res) => {
@@ -454,34 +461,42 @@ app.get('/api/time', (req, res) => {
   });
 });
 
-app.get('/api/calendar/menu', (req, res) => {
-  const requestedDate = typeof req.query.date === 'string' ? req.query.date : getLocalDateKey();
-  const store = readCalendarStore();
-  const menu = store.menuByDate[requestedDate] || null;
-  res.json({ date: requestedDate, menu, timeZone: CALENDAR_TIME_ZONE, calendar: store.calendar });
+app.get('/api/calendar/menu', async (req, res) => {
+  try {
+    const requestedDate = typeof req.query.date === 'string' ? req.query.date : getLocalDateKey();
+    const store = await readCalendarStore();
+    const menu = store.menuByDate[requestedDate] || null;
+    res.json({ date: requestedDate, menu, timeZone: CALENDAR_TIME_ZONE, calendar: store.calendar });
+  } catch (error) {
+    res.status(error.code === 'MONGODB_UNAVAILABLE' ? 503 : 500).json({ message: error.message });
+  }
 });
 
-app.post('/api/calendar', (req, res) => {
+app.post('/api/calendar', async (req, res) => {
   const payload = req.body;
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     return res.status(400).json({ message: 'Calendar upload must be a JSON object.' });
   }
 
-  const existing = readCalendarStore();
-  const menuByDate = payload.menuByDate && typeof payload.menuByDate === 'object' && !Array.isArray(payload.menuByDate)
-    ? payload.menuByDate
-    : existing.menuByDate;
-  const calendar = payload.calendar || payload;
-  const events = Array.isArray(payload.events) ? payload.events : Array.isArray(payload.items) ? payload.items : existing.events;
-  const store = {
-    calendar: { ...calendar, timeZone: CALENDAR_TIME_ZONE },
-    menuByDate,
-    events,
-    timeZone: CALENDAR_TIME_ZONE,
-    updatedAt: new Date().toISOString()
-  };
-  writeCalendarStore(store);
-  res.status(201).json(store);
+  try {
+    const existing = await readCalendarStore();
+    const menuByDate = payload.menuByDate && typeof payload.menuByDate === 'object' && !Array.isArray(payload.menuByDate)
+      ? payload.menuByDate
+      : existing.menuByDate;
+    const calendar = payload.calendar || payload;
+    const events = Array.isArray(payload.events) ? payload.events : Array.isArray(payload.items) ? payload.items : existing.events;
+    const store = {
+      calendar: { ...calendar, timeZone: CALENDAR_TIME_ZONE },
+      menuByDate,
+      events,
+      timeZone: CALENDAR_TIME_ZONE,
+      updatedAt: new Date().toISOString()
+    };
+    await writeCalendarStore(store);
+    res.status(201).json(store);
+  } catch (error) {
+    res.status(error.code === 'MONGODB_UNAVAILABLE' ? 503 : 500).json({ message: error.message });
+  }
 });
 
 initializeMongo().catch(error => {
