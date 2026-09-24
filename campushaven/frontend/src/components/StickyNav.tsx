@@ -12,6 +12,7 @@ export const StickyNav: React.FC = () => {
   const authUser = authUserStr ? JSON.parse(authUserStr) : null;
 
   const handleLogout = () => {
+    if (!window.confirm('Are you sure you want to sign out?')) return;
     localStorage.removeItem('campushaven_user');
     navigate('/login');
   };

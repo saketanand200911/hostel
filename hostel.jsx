@@ -239,6 +239,7 @@ function renderNavAuth() {
 }
 
 function handleLogout() {
+    if (!window.confirm('Are you sure you want to sign out?')) return;
     localStorage.removeItem('campushaven_user');
     localStorage.removeItem('campushaven_token');
     showAlert('Signed out successfully.', 'info');
