@@ -21,6 +21,96 @@ function getLocalDateKey(date = new Date()) {
     }).format(date);
 }
 
+function getWeekdayName(dateKey) {
+    return new Date(`${dateKey}T12:00:00+05:30`).toLocaleDateString('en-US', {
+        weekday: 'long',
+        timeZone: APP_TIME_ZONE
+    });
+}
+
+function getWeekDateKeys(dateKey) {
+    const [year, month, day] = dateKey.split('-').map(Number);
+    const sunday = new Date(Date.UTC(year, month - 1, day));
+    sunday.setUTCDate(sunday.getUTCDate() - sunday.getUTCDay());
+    return Array.from({ length: 7 }, (_, index) => {
+        const date = new Date(sunday);
+        date.setUTCDate(sunday.getUTCDate() + index);
+        return date.toISOString().slice(0, 10);
+    });
+}
+
+function getWeeklyMenuForDate(dateKey) {
+    const weekday = getWeekdayName(dateKey);
+    const meals = ['breakfast', 'lunch', 'snacks', 'dinner'];
+    const tables = document.querySelectorAll('#mess-subview-weekly table');
+    const menu = {};
+
+    meals.forEach((meal, tableIndex) => {
+        const table = tables[tableIndex];
+        const headers = Array.from(table?.tHead?.rows[0]?.cells || []);
+        headers.slice(1).forEach((header) => {
+            if (!header.dataset.weekday) header.dataset.weekday = header.textContent.trim();
+        });
+        const columnIndex = headers.findIndex((header) => header.dataset.weekday === weekday);
+        if (columnIndex < 1) {
+            menu[meal] = [];
+            return;
+        }
+
+        menu[meal] = Array.from(table.tBodies[0]?.rows || [])
+            .map((row) => {
+                const category = row.cells[0]?.textContent.trim().replace(/\s+/g, ' ');
+                const item = row.cells[columnIndex]?.textContent.trim().replace(/\s+/g, ' ');
+                return item && item !== '—' ? `${category}: ${item}` : null;
+            })
+            .filter(Boolean);
+    });
+
+    return menu;
+}
+
+function updateWeeklyMenuDates(dateKey) {
+    const weekDates = getWeekDateKeys(dateKey);
+    document.querySelectorAll('#mess-subview-weekly table').forEach((table) => {
+        const headers = Array.from(table.tHead?.rows[0]?.cells || []).slice(1);
+        headers.forEach((header, index) => {
+            if (!header.dataset.weekday) header.dataset.weekday = header.textContent.trim();
+            const weekday = document.createElement('span');
+            weekday.textContent = header.dataset.weekday;
+            const date = document.createElement('span');
+            date.className = 'block text-[9px] font-normal normal-case';
+            date.textContent = new Date(`${weekDates[index]}T12:00:00+05:30`).toLocaleDateString('en-IN', {
+                day: 'numeric',
+                month: 'short',
+                timeZone: APP_TIME_ZONE
+            });
+            header.replaceChildren(weekday, date);
+        });
+    });
+}
+
+function renderDateMenu(menu) {
+    ['breakfast', 'lunch', 'snacks', 'dinner'].forEach((meal) => {
+        const list = document.getElementById(`menu-${meal}`);
+        if (!list) return;
+        const value = menu?.[meal];
+        const items = Array.isArray(value) ? value : value ? [value] : [];
+        list.replaceChildren();
+        if (items.length) {
+            items.forEach((item) => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `• ${String(item)}`;
+                list.appendChild(listItem);
+            });
+        } else {
+            const listItem = document.createElement('li');
+            listItem.className = 'text-slate-400';
+            listItem.textContent = 'No menu uploaded for this meal.';
+            list.appendChild(listItem);
+        }
+    });
+}
+
 const PALETTES = {
     boys: {
         primary: '#0f172a', secondary: '#1e293b', accent: '#f59e0b', ink: '#0f172a',
@@ -116,8 +206,12 @@ async function uploadCalendarFile(input) {
     }
 }
 
-async function loadDateMenu() {
-    const date = getLocalDateKey();
+async function loadDateMenu(requestedDate) {
+    const dateInput = document.getElementById('mess-menu-date');
+    const date = requestedDate || dateInput?.value || getLocalDateKey();
+    const weekday = getWeekdayName(date);
+    const weeklyMenu = getWeeklyMenuForDate(date);
+    updateWeeklyMenuDates(date);
     const dateLabel = document.getElementById('mess-date-label');
     const time = new Intl.DateTimeFormat('en-IN', {
         timeZone: APP_TIME_ZONE,
@@ -125,22 +219,18 @@ async function loadDateMenu() {
         minute: '2-digit',
         hour12: true
     }).format(new Date());
-    if (dateLabel) dateLabel.textContent = `· ${date} · ${time} IST`;
+    if (dateLabel) dateLabel.textContent = `· ${weekday} · ${date} · ${time} IST`;
+    renderDateMenu(weeklyMenu);
     updateMealStatuses();
+
+    if (!backendIsAvailable()) return;
 
     try {
         const response = await fetch(`${API_BASE_URL}/calendar/menu?date=${date}`);
         if (!response.ok) return;
         const result = await response.json();
-        ['breakfast', 'lunch', 'snacks', 'dinner'].forEach(meal => {
-            const list = document.getElementById(`menu-${meal}`);
-            if (!list) return;
-            const value = result.menu?.[meal];
-            const items = Array.isArray(value) ? value : value ? [value] : [];
-            list.innerHTML = items.length
-                ? items.map(item => `<li>• ${String(item)}</li>`).join('')
-                : '<li class="text-slate-400">No menu uploaded for this meal.</li>';
-        });
+        if (dateLabel) dateLabel.textContent = `· ${result.weekday || weekday} · ${date} · ${time} IST`;
+        renderDateMenu({ ...weeklyMenu, ...(result.menu || {}) });
         updateMealStatuses();
     } catch (error) {
         // Keep the built-in weekday menu when the backend is unavailable.
@@ -379,10 +469,8 @@ function triggerGoogleAuth() {
     }
 
     const returnTo = window.location.protocol === 'file:'
-        ? 'http://localhost:5501/index.html'
-        : ['localhost', '127.0.0.1'].includes(window.location.hostname)
-            ? 'http://localhost:5501/index.html'
-            : window.location.href.split('?')[0];
+        ? 'http://localhost:5502/index.html'
+        : `${window.location.origin}${window.location.pathname}`;
     window.location.assign(`${API_BASE_URL}/auth/google/start?returnTo=${encodeURIComponent(returnTo)}`);
 }
 
@@ -565,6 +653,12 @@ document.addEventListener('DOMContentLoaded', () => {
     renderNavAuth();
     handleGoogleRedirectSession();
     navigateTo('home');
+    const menuDateInput = document.getElementById('mess-menu-date');
+    if (menuDateInput) {
+        menuDateInput.value = getLocalDateKey();
+        menuDateInput.addEventListener('change', () => loadDateMenu(menuDateInput.value));
+    }
+    loadDateMenu();
     menuRefreshTimer = window.setInterval(() => loadDateMenu(), 60 * 1000);
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) loadDateMenu();
