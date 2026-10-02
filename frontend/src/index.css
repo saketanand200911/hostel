@@ -1,0 +1,443 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Off-White Global Base Palette */
+  --primary: #0f172a;
+  --secondary: #1e293b;
+  --accent: #f59e0b;
+  --accent-muted: rgba(251, 191, 36, 0.2);
+  --ink: #0f172a;
+  --paper: #FAF8F5;
+  --paper-card: #FFFDF9;
+  --grid-line: #E7E2DA;
+  --sketch-border: #0f172a;
+  --sketch-shadow: #0f172a;
+  --highlighter: #fde68a;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Patrick Hand', cursive, sans-serif;
+  background-color: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  background-image: 
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Ensure white panels globally map to off-white */
+.bg-white {
+  background-color: var(--paper-card) !important;
+}
+
+/* Typography styles */
+.font-hand {
+  font-family: 'Patrick Hand', cursive, sans-serif;
+}
+
+.font-draft {
+  font-family: 'Architects Daughter', cursive, sans-serif;
+}
+
+.font-script {
+  font-family: 'Caveat', cursive, sans-serif;
+}
+
+.font-mono-draft {
+  font-family: 'Space Mono', monospace, monospace;
+}
+
+/* Sketchy Borders & Shapes */
+.sketch-card {
+  background-color: var(--paper-card);
+  border: 2px solid var(--sketch-border);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  box-shadow: 4px 4px 0px 0px var(--sketch-shadow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sketch-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 0px 0px var(--sketch-shadow);
+}
+
+.sketch-card-alt {
+  background-color: var(--paper-card);
+  border: 2px solid var(--sketch-border);
+  border-radius: 15px 255px 15px 225px / 225px 15px 255px 15px;
+  box-shadow: 4px 4px 0px 0px var(--sketch-shadow);
+}
+
+.sketch-box {
+  border: 2px solid var(--sketch-border);
+  border-radius: 255px 25px 225px 25px / 25px 225px 25px 255px;
+  box-shadow: 3px 3px 0px 0px var(--sketch-shadow);
+}
+
+/* Interactive Sketch Button */
+.sketch-btn {
+  font-family: 'Architects Daughter', cursive, sans-serif;
+  border: 2px solid var(--sketch-border);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  box-shadow: 3px 3px 0px 0px var(--sketch-shadow);
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.sketch-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px 0px var(--sketch-shadow);
+}
+
+.sketch-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px 0px var(--sketch-shadow);
+}
+
+/* Sketch Input Fields */
+.sketch-input {
+  border: 2px solid var(--sketch-border);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  box-shadow: inset 1px 2px 3px rgba(0, 0, 0, 0.05);
+  background-color: #ffffff;
+  color: var(--ink);
+  transition: box-shadow 0.2s ease;
+}
+
+.sketch-input:focus {
+  outline: none;
+  box-shadow: 3px 3px 0px 0px var(--accent);
+}
+
+/* Highlighter Marker Effect */
+.highlighter {
+  background: linear-gradient(104deg, rgba(254, 240, 138, 0) 0.9%, var(--highlighter) 2.4%, var(--highlighter) 95%, rgba(254, 240, 138, 0) 98%);
+  padding: 0 0.35rem;
+  border-radius: 4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Washi Tape / Pin Decorator */
+.washi-tape {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 90px;
+  height: 22px;
+  background-color: rgba(254, 240, 138, 0.85);
+  border-left: 2px dashed rgba(0,0,0,0.15);
+  border-right: 2px dashed rgba(0,0,0,0.15);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+.washi-tape-accent {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(2deg);
+  width: 90px;
+  height: 22px;
+  background-color: var(--accent);
+  opacity: 0.8;
+  border-left: 2px dashed rgba(0,0,0,0.2);
+  border-right: 2px dashed rgba(0,0,0,0.2);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+/* Custom rough stamp */
+.stamp-badge {
+  border: 2.5px solid var(--accent);
+  color: var(--accent);
+  border-radius: 8px;
+  text-transform: uppercase;
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 0.1em;
+  transform: rotate(-3deg);
+  display: inline-block;
+  padding: 2px 8px;
+  font-weight: bold;
+}
+
+/* Custom scrollbar in sketch theme */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--paper);
+  border-left: 1px solid var(--grid-line);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--sketch-border);
+  border-radius: 6px;
+  border: 2px solid var(--paper);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* ===================================================
+   BOYS WING: BOLD COLORS, SOLID MINIMALIST CARDS, MODERN TYPOGRAPHY
+   =================================================== */
+body.theme-boys {
+  background-color: #FAF8F5 !important;
+  background-image:
+    linear-gradient(to right, #E7E2DA 1px, transparent 1px),
+    linear-gradient(to bottom, #E7E2DA 1px, transparent 1px) !important;
+  background-size: 28px 28px !important;
+  color: #0f172a !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
+
+body.theme-boys h1,
+body.theme-boys h2,
+body.theme-boys h3,
+body.theme-boys h4,
+body.theme-boys .font-draft {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
+  color: #0f172a !important;
+}
+
+body.theme-boys p,
+body.theme-boys span,
+body.theme-boys label,
+body.theme-boys button,
+body.theme-boys select,
+body.theme-boys input,
+body.theme-boys textarea,
+body.theme-boys .font-hand {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
+
+body.theme-boys .sketch-card,
+body.theme-boys .sketch-card-alt {
+  background-color: #FFFDF9 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 2px solid #0f172a !important;
+  border-radius: 14px !important;
+  box-shadow: 4px 4px 0px 0px #0f172a !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+body.theme-boys .sketch-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 6px 6px 0px 0px #0f172a !important;
+}
+
+body.theme-boys .sketch-box {
+  background-color: #FAF6F0 !important;
+  border: 2px solid #0f172a !important;
+  border-radius: 10px !important;
+  box-shadow: 3px 3px 0px 0px #0f172a !important;
+}
+
+body.theme-boys .sketch-btn {
+  background-color: #f59e0b !important;
+  color: #0f172a !important;
+  border: 2px solid #0f172a !important;
+  border-radius: 10px !important;
+  box-shadow: 3px 3px 0px 0px #0f172a !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 800 !important;
+}
+
+body.theme-boys .sketch-btn:hover {
+  background-color: #fbbf24 !important;
+  transform: translate(-1px, -1px) !important;
+  box-shadow: 4px 4px 0px 0px #0f172a !important;
+}
+
+body.theme-boys header {
+  background-color: #FAF8F5 !important;
+  border-bottom: 2px solid #0f172a !important;
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* ===================================================
+   GIRLS WING: OFF-WHITE, SOFT GRADIENTS, GLASSMORPHISM & ELEGANT TYPOGRAPHY
+   =================================================== */
+body.theme-girls {
+  background: radial-gradient(circle at 10% 20%, rgba(254, 205, 211, 0.45) 0%, transparent 40%),
+              radial-gradient(circle at 90% 80%, rgba(253, 242, 248, 0.7) 0%, transparent 45%),
+              radial-gradient(circle at 50% 50%, rgba(255, 241, 242, 0.4) 0%, transparent 60%),
+              #FAF8F5 !important;
+  background-size: cover !important;
+  color: #d7dcb1 !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
+
+body.theme-girls header {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-bottom: 1px solid rgba(244, 63, 94, 0.15) !important;
+  box-shadow: 0 4px 24px -2px rgba(225, 29, 72, 0.06) !important;
+}
+
+body.theme-girls .sketch-card,
+body.theme-girls .sketch-card-alt {
+  background: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 12px 35px -4px rgba(225, 29, 72, 0.08), 
+              0 4px 12px -2px rgba(0, 0, 0, 0.02), 
+              inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+body.theme-girls .sketch-card:hover {
+  transform: translateY(-3px) scale(1.006) !important;
+  box-shadow: 0 20px 42px -6px rgba(225, 29, 72, 0.13), 
+              inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+  border-color: rgba(244, 63, 94, 0.3) !important;
+}
+
+body.theme-girls .sketch-box {
+  background: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(244, 63, 94, 0.18) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 14px -2px rgba(225, 29, 72, 0.04) !important;
+}
+
+body.theme-girls .sketch-btn {
+  background: linear-gradient(135deg, #FB7185 0%, #F43F5E 50%, #E11D48 100%) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 20px -4px rgba(225, 29, 72, 0.35), 
+              inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  transition: all 0.2s ease !important;
+}
+
+body.theme-girls .sketch-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 12px 26px -4px rgba(225, 29, 72, 0.45), 
+              inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+
+body.theme-girls .sketch-btn:active {
+  transform: translateY(1px) !important;
+  box-shadow: 0 4px 10px -2px rgba(225, 29, 72, 0.3) !important;
+}
+
+body.theme-girls .sketch-input {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1.5px solid rgba(244, 63, 94, 0.22) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02) !important;
+  color: #831843 !important;
+}
+
+body.theme-girls .sketch-input:focus {
+  border-color: #F43F5E !important;
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.2) !important;
+}
+
+/* Elegant Typography for Girls Wing */
+body.theme-girls h1, 
+body.theme-girls h2, 
+body.theme-girls h3, 
+body.theme-girls .font-draft {
+  font-family: 'Playfair Display', Georgia, serif !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+  color: #d7dcb1 !important;
+}
+
+body.theme-girls .font-hand {
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif !important;
+  color: #d7dcb1 !important;
+}
+
+body.theme-girls .font-script {
+  font-family: 'Playfair Display', serif !important;
+  font-style: italic !important;
+  font-weight: 600 !important;
+  color: #BE185D !important;
+}
+
+body.theme-girls .washi-tape {
+  background: linear-gradient(135deg, rgba(251, 113, 133, 0.25), rgba(244, 63, 94, 0.35)) !important;
+  border-left: 2px solid rgba(244, 63, 94, 0.3) !important;
+  border-right: 2px solid rgba(244, 63, 94, 0.3) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.1) !important;
+}
+
+body.theme-girls .stamp-badge {
+  border: 1px solid #F43F5E !important;
+  color: #E11D48 !important;
+  background: rgba(255, 241, 242, 0.9) !important;
+  border-radius: 9999px !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  letter-spacing: 0.05em !important;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.08) !important;
+  font-weight: 700 !important;
+}
+
+body.theme-girls .highlighter {
+  background: linear-gradient(104deg, rgba(254, 205, 211, 0) 0%, rgba(254, 205, 211, 0.7) 2%, rgba(254, 205, 211, 0.7) 96%, rgba(254, 205, 211, 0) 99%) !important;
+  color: #831843 !important;
+  border-radius: 6px !important;
+}
+
+body.theme-girls footer {
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(12px) !important;
+  border-top: 1px solid rgba(244, 63, 94, 0.15) !important;
+  color: #9F1239 !important;
+}
+
+/* ===================================================
+   GIRLS WING: LOGIN PORTAL GLASSMORPHISM & ELEGANCE
+   =================================================== */
+body.theme-girls .max-w-lg.sketch-card {
+  background: rgba(255, 255, 255, 0.78) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.95) !important;
+  border-radius: 28px !important;
+  box-shadow: 0 20px 50px -10px rgba(190, 24, 93, 0.10), 0 4px 20px rgba(0, 0, 0, 0.02) !important;
+}
+
+body.theme-girls .grid.grid-cols-3 button.sketch-btn {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(244, 63, 94, 0.2) !important;
+  border-radius: 14px !important;
+  color: #d7dcb1 !important;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.04) !important;
+  font-family: 'Outfit', sans-serif !important;
+  transition: all 0.2s ease !important;
+}
+
+body.theme-girls .grid.grid-cols-3 button.sketch-btn:hover {
+  background: rgba(255, 241, 242, 0.95) !important;
+  border-color: #F43F5E !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 18px rgba(244, 63, 94, 0.18) !important;
+}
+
