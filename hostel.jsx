@@ -18,8 +18,8 @@ const PALETTES = {
         paper: '#FAF8F5', sketchBorder: '#0f172a', sketchShadow: '#0f172a', highlighter: '#fde68a'
     },
     girls: {
-        primary: '#F8FAF7', secondary: '#F0F5EC', accent: '#84CC16', ink: '#14532D',
-        paper: '#F8FAF7', sketchBorder: 'rgba(74, 222, 128, 0.3)', sketchShadow: 'rgba(20, 83, 45, 0.08)', highlighter: '#FDE047'
+        primary: '#4A2638', secondary: '#6B4054', accent: '#4A2638', ink: '#3A2931',
+        paper: '#FCF8F5', sketchBorder: '#E8D9D9', sketchShadow: 'rgba(74, 38, 56, 0.12)', highlighter: '#E8C9D2'
     }
 };
 
@@ -464,48 +464,8 @@ function openModal(type) {
                         </div>
                     </form>
                 `;
-    } else if (type === 'feedback') {
-        title.textContent = '🍽️ Rate Today\'s Meal';
-        body.innerHTML = `
-                    <form onsubmit="handleMealFeedbackSubmit(event)" class="space-y-3 font-bold text-xs">
-                        <div>
-                            <span class="block mb-1">Star rating</span>
-                            <div class="flex items-center gap-1" role="radiogroup" aria-label="Meal rating">
-                                ${[1, 2, 3, 4, 5].map(rating => `<label class="cursor-pointer text-3xl leading-none"><input type="radio" name="meal-rating" value="${rating}" class="sr-only peer" ${rating === 4 ? 'checked' : ''} required><span class="text-slate-300 peer-checked:text-amber-500 hover:text-amber-400">★</span></label>`).join('')}
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block mb-1" for="meal-description">Description / suggestions</label>
-                            <textarea id="meal-description" rows="3" required placeholder="Tell us what you liked or what should improve..." class="w-full sketch-input px-3 py-2 text-sm font-bold"></textarea>
-                        </div>
-                        <div>
-                            <label class="block mb-1" for="meal-attachment">Upload a meal photo or document</label>
-                            <input id="meal-attachment" type="file" accept="image/*,.pdf,.txt" class="w-full sketch-input px-3 py-2 text-xs font-bold" />
-                        </div>
-                        <div class="flex gap-2 justify-end pt-2">
-                            <button type="button" onclick="closeModal()" class="px-4 py-2 sketch-btn bg-slate-100 text-slate-700">Cancel</button>
-                            <button type="submit" class="px-4 py-2 sketch-btn text-slate-900" style="background-color: var(--accent);">Submit Feedback</button>
-                        </div>
-                    </form>
-                `;
     }
     modal.classList.remove('hidden');
-}
-
-function handleMealFeedbackSubmit(e) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const rating = form.querySelector('input[name="meal-rating"]:checked').value;
-    const description = form.querySelector('#meal-description').value.trim();
-    const attachment = form.querySelector('#meal-attachment').files[0];
-    localStorage.setItem('campushaven_meal_feedback', JSON.stringify({
-        rating: Number(rating),
-        description,
-        attachmentName: attachment ? attachment.name : null,
-        submittedAt: new Date().toISOString()
-    }));
-    closeModal();
-    showAlert(`Thank you! Your ${rating}-star meal feedback${attachment ? ' and attachment' : ''} was saved.`, 'success');
 }
 
 function closeModal() {

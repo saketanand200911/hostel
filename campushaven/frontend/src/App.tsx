@@ -7,7 +7,7 @@ import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { StudentPortal } from './pages/StudentPortal';
 import { AdminConsole } from './pages/AdminConsole';
-import { HelpDeskPage, NoticesPage, WeeklyTimetable } from './pages/StudentPages';
+import { HelpDeskPage, NoticesPage } from './pages/StudentPages';
 
 export const App: React.FC = () => {
   return (
@@ -23,14 +23,6 @@ export const App: React.FC = () => {
               element={
                 <ProtectedRoute allowedRoles={['student']}>
                   <StudentPortal />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student/timetable"
-              element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <WeeklyTimetable />
                 </ProtectedRoute>
               }
             />

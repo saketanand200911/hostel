@@ -45,37 +45,33 @@
             </a>
 
             <!-- Quick Page Navigation Bar -->
-            <nav class="hidden md:flex items-center gap-1.5 overflow-x-auto text-xs font-bold py-1" id="main-nav-links">
+            <nav class="hidden md:flex items-center gap-0.5 overflow-x-auto text-xs font-bold py-1" id="main-nav-links">
                 <button onclick="navigateTo('home')" id="navlink-home"
-                    class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1">
+                    class="px-1 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1 whitespace-nowrap">
                     🏠 Home
                 </button>
                 <button onclick="navigateTo('pass')" id="navlink-pass"
-                    class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1">
+                    class="px-1 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1 whitespace-nowrap">
                     🎫 Gate Pass
                 </button>
                 <button onclick="navigateTo('mess')" id="navlink-mess"
-                    class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1">
+                    class="px-1 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1 whitespace-nowrap">
                     🍽️ Food & Mess
                 </button>
-                <button onclick="navigateTo('timetable')" id="navlink-timetable"
-                    class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1">
-                    🗓️ Weekly Timetable
-                </button>
                 <button onclick="navigateTo('repairs')" id="navlink-repairs"
-                    class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1">
+                    class="px-1.5 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1 whitespace-nowrap">
                     🔧 Room Repairs
                 </button>
                 <button onclick="navigateTo('packages')" id="navlink-packages"
-                    class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1">
+                    class="px-1.5 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1 whitespace-nowrap">
                     📦 Parcels & Laundry
                 </button>
                 <button onclick="navigateTo('emergency')" id="navlink-emergency"
-                    class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1 text-red-700">
+                    class="px-1.5 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1 text-red-700 whitespace-nowrap">
                     🆘 SOS & Help
                 </button>
                 <button onclick="navigateTo('rules')" id="navlink-rules"
-                    class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1">
+                    class="px-1.5 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1 whitespace-nowrap">
                     📜 Rules & FAQs
                 </button>
             </nav>
@@ -94,32 +90,43 @@
             </div>
         </div>
 
-        <!-- Mobile Navigation Strip -->
-        <div
-            class="md:hidden flex items-center gap-1 overflow-x-auto px-4 py-2 border-t border-[var(--sketch-border)] bg-[var(--paper)] text-[11px] font-bold">
-            <button onclick="navigateTo('home')"
-                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🏠 Home</button>
-            <button onclick="navigateTo('pass')"
-                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🎫
-                Outpass</button>
-            <button onclick="navigateTo('mess')"
-                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🍽️ Food
-                Menu</button>
-            <button onclick="navigateTo('timetable')"
-                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🗓️
-                Timetable</button>
-            <button onclick="navigateTo('repairs')"
-                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🔧 Fix
-                Issue</button>
-            <button onclick="navigateTo('packages')"
-                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">📦
-                Deliveries</button>
-            <button onclick="navigateTo('emergency')"
-                class="px-2.5 py-1 rounded-md bg-red-100 border border-red-500 text-red-800 shrink-0">🆘 SOS</button>
-            <button onclick="navigateTo('rules')"
-                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">📜 Rules</button>
+        <div class="theme-toolbar">
+            <div id="theme-switcher" class="theme-switcher" role="group" aria-label="Choose website theme">
+                <button type="button" class="theme-option" data-theme-option="light" onclick="setTheme('light')"
+                    aria-label="Light theme" aria-pressed="true" title="Light theme">
+                    <span aria-hidden="true">☀️</span><span class="theme-option-label">Light</span>
+                </button>
+                <button type="button" class="theme-option" data-theme-option="dark" onclick="setTheme('dark')"
+                    aria-label="Dark theme" aria-pressed="false" title="Dark theme">
+                    <span aria-hidden="true">🌙</span><span class="theme-option-label">Dark</span>
+                </button>
+            </div>
         </div>
+
     </header>
+
+    <!-- Mobile Navigation Strip -->
+    <div
+        class="mobile-navigation-strip md:hidden flex items-center gap-1 overflow-x-auto px-4 py-2 border-t border-[var(--sketch-border)] bg-[var(--paper)] text-[11px] font-bold">
+        <button onclick="navigateTo('home')"
+            class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🏠 Home</button>
+        <button onclick="navigateTo('pass')"
+            class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🎫
+            Outpass</button>
+        <button onclick="navigateTo('mess')"
+            class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🍽️ Food
+            Menu</button>
+        <button onclick="navigateTo('repairs')"
+            class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🔧 Fix
+            Issue</button>
+        <button onclick="navigateTo('packages')"
+            class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">📦
+            Deliveries</button>
+        <button onclick="navigateTo('emergency')"
+            class="px-2.5 py-1 rounded-md bg-red-100 border border-red-500 text-red-800 shrink-0">🆘 SOS</button>
+        <button onclick="navigateTo('rules')"
+            class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">📜 Rules</button>
+    </div>
 
     <!-- Alert Banner -->
     <div id="global-alert-box" class="max-w-6xl mx-auto px-4 sm:px-6 w-full mt-4 hidden">
@@ -265,84 +272,7 @@
                         <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- 2. WEEKLY TIMETABLE VIEW -->
-        <section id="view-timetable" class="hidden space-y-6 animate-fade-in">
-            <div class="flex items-center justify-between gap-3">
-                <div>
-                    <p class="text-xs uppercase tracking-widest font-mono-draft text-slate-500">Resident schedule</p>
-                    <h2 class="text-2xl sm:text-3xl font-black font-draft text-[var(--ink)]">🗓️ Weekly Timetable</h2>
-                    <p class="text-sm text-slate-600 mt-1 font-hand">Your academic and residence activities from Monday
-                        to Saturday.</p>
-                    <div class="mt-3 flex flex-wrap items-center gap-2">
-                        <label for="standalone-calendar-upload"
-                            class="px-3 py-2 sketch-btn text-xs font-bold cursor-pointer">Upload calendar JSON</label>
-                        <input id="standalone-calendar-upload" type="file" accept="application/json,.json"
-                            class="sr-only" onchange="uploadCalendarFile(this)" />
-                        <span id="calendar-upload-status" class="text-xs font-bold text-emerald-700"></span>
-                    </div>
-                </div>
-                <button onclick="navigateTo('home')" class="px-3 py-1.5 sketch-btn bg-slate-100 text-xs font-bold">←
-                    Home</button>
-            </div>
-            <div class="sketch-card p-4 overflow-x-auto">
-                <table class="w-full min-w-[720px] text-left font-hand">
-                    <thead>
-                        <tr class="border-b-2 border-[var(--sketch-border)] font-draft text-[var(--ink)]">
-                            <th class="p-3">Day</th>
-                            <th class="p-3">09:00</th>
-                            <th class="p-3">11:00</th>
-                            <th class="p-3">14:00</th>
-                            <th class="p-3">16:00</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b border-[var(--grid-line)]">
-                            <th class="p-3 font-bold">Monday</th>
-                            <td class="p-3">Data Structures</td>
-                            <td class="p-3">Operating Systems</td>
-                            <td class="p-3">Library / Study Hall</td>
-                            <td class="p-3">Web Engineering</td>
-                        </tr>
-                        <tr class="border-b border-[var(--grid-line)]">
-                            <th class="p-3 font-bold">Tuesday</th>
-                            <td class="p-3">Database Systems</td>
-                            <td class="p-3">Computer Networks</td>
-                            <td class="p-3">Sports & Wellness</td>
-                            <td class="p-3">Data Structures Lab</td>
-                        </tr>
-                        <tr class="border-b border-[var(--grid-line)]">
-                            <th class="p-3 font-bold">Wednesday</th>
-                            <td class="p-3">Web Engineering</td>
-                            <td class="p-3">Database Systems</td>
-                            <td class="p-3">Project Studio</td>
-                            <td class="p-3">Operating Systems</td>
-                        </tr>
-                        <tr class="border-b border-[var(--grid-line)]">
-                            <th class="p-3 font-bold">Thursday</th>
-                            <td class="p-3">Computer Networks</td>
-                            <td class="p-3">Data Structures</td>
-                            <td class="p-3">Mentor Hour</td>
-                            <td class="p-3">Database Systems Lab</td>
-                        </tr>
-                        <tr class="border-b border-[var(--grid-line)]">
-                            <th class="p-3 font-bold">Friday</th>
-                            <td class="p-3">Operating Systems</td>
-                            <td class="p-3">Project Studio</td>
-                            <td class="p-3">Computer Networks</td>
-                            <td class="p-3">Open Elective</td>
-                        </tr>
-                        <tr>
-                            <th class="p-3 font-bold">Saturday</th>
-                            <td class="p-3">Residence Assembly</td>
-                            <td class="p-3">Study Hall</td>
-                            <td class="p-3">Club Activities</td>
-                            <td class="p-3">Weekend Check-in</td>
-                        </tr>
-                    </tbody>
-                </table>
             </div>
         </section>
 
@@ -423,18 +353,13 @@
                     <h2 class="text-2xl font-black font-draft text-[var(--ink)]">🍽️ Food, Dining & Mess Menu <span
                             id="mess-date-label" class="text-sm font-mono-draft text-slate-500"></span></h2>
                 </div>
-                <button onclick="openModal('feedback')" class="px-4 py-2 sketch-btn text-xs font-bold text-slate-900"
-                    style="background-color: var(--accent);">
-                    ⭐ Rate Today's Meal
-                </button>
             </div>
 
             <div class="flex gap-2 border-b-2 border-[var(--sketch-border)] pb-2 font-bold text-xs">
                 <button onclick="switchMessTab('today')" id="tab-mess-today"
                     class="px-4 py-2 rounded-xl subnav-tab-active">🍲 Today's Food Menu</button>
                 <button onclick="switchMessTab('weekly')" id="tab-mess-weekly"
-                    class="px-4 py-2 rounded-xl bg-white border border-[var(--sketch-border)]">📅 Weekly
-                    Timetable</button>
+                    class="px-4 py-2 rounded-xl bg-white border border-[var(--sketch-border)]">📅 Weekly Menu</button>
             </div>
 
             <div id="mess-subview-today" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1029,13 +954,32 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-hand">
                 <div class="sketch-card p-6 bg-emerald-50 border-emerald-400 space-y-2">
                     <h3 class="text-lg font-black font-draft text-emerald-950">✅ Do's</h3>
-                    <p class="text-sm font-bold text-slate-800">• Scan QR code for entry & exit between 6 AM and 10 PM.
-                    </p>
+                    <ul class="list-disc pl-5 space-y-2 text-sm font-bold text-slate-800 leading-relaxed">
+                        <li>Maintain cleanliness in rooms, corridors, washrooms, and common areas.</li>
+                        <li>Follow hostel entry and exit timings.</li>
+                        <li>Register visitors according to hostel policy.</li>
+                        <li>Keep valuables and personal belongings secure.</li>
+                        <li>Report maintenance, safety, or electrical issues promptly.</li>
+                        <li>Use common facilities responsibly and leave them clean after use.</li>
+                        <li>Follow mess timings and maintain cleanliness in the dining area.</li>
+                        <li>Inform the warden/hostel office about overnight stays outside the hostel as per policy.</li>
+                        <li>Respect roommates' privacy, study time, and personal space.</li>
+                    </ul>
                 </div>
                 <div class="sketch-card p-6 bg-rose-50 border-rose-400 space-y-2">
                     <h3 class="text-lg font-black font-draft text-rose-950">🚫 Don'ts</h3>
-                    <p class="text-sm font-bold text-slate-800">• No late entry without approved pass or warden
-                        notification.</p>
+                    <ul class="list-disc pl-5 space-y-2 text-sm font-bold text-slate-800 leading-relaxed">
+                        <li>Do not allow unauthorized persons into the hostel.</li>
+                        <li>Do not share access cards, keys, or entry credentials.</li>
+                        <li>Do not damage hostel furniture, appliances, or property.</li>
+                        <li>Do not create excessive noise, especially during designated quiet hours.</li>
+                        <li>Do not use prohibited electrical appliances or unsafe equipment.</li>
+                        <li>Do not smoke, vape, consume alcohol, or possess prohibited substances on hostel premises.</li>
+                        <li>Do not tamper with fire alarms, CCTV, emergency equipment, or security systems.</li>
+                        <li>Do not engage in harassment, bullying, or threatening behavior.</li>
+                        <li>Do not misuse common areas or facilities.</li>
+                        <li>Do not violate hostel curfew/entry policies.</li>
+                    </ul>
                 </div>
             </div>
         </section>

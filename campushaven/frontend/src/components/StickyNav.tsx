@@ -80,7 +80,6 @@ export const StickyNav: React.FC = () => {
                 <>
                   <nav className="hidden lg:flex items-center gap-1" aria-label="Resident pages">
                     <Link to="/student" className={`px-2 py-1 text-xs font-bold ${location.pathname === '/student' ? 'text-[var(--accent)]' : 'text-[var(--ink)]'}`}>Dashboard</Link>
-                    <Link to="/student/timetable" className={`px-2 py-1 text-xs font-bold ${location.pathname === '/student/timetable' ? 'text-[var(--accent)]' : 'text-[var(--ink)]'}`}>Timetable</Link>
                     <Link to="/student/notices" className={`px-2 py-1 text-xs font-bold ${location.pathname === '/student/notices' ? 'text-[var(--accent)]' : 'text-[var(--ink)]'}`}>Notices</Link>
                     <Link to="/student/help" className={`px-2 py-1 text-xs font-bold ${location.pathname === '/student/help' ? 'text-[var(--accent)]' : 'text-[var(--ink)]'}`}>Help</Link>
                   </nav>
@@ -91,7 +90,6 @@ export const StickyNav: React.FC = () => {
                     className="lg:hidden sketch-input text-xs px-2 py-1.5 font-bold"
                   >
                     <option value="/student">Dashboard</option>
-                    <option value="/student/timetable">Timetable</option>
                     <option value="/student/notices">Notices</option>
                     <option value="/student/help">Help desk</option>
                   </select>

@@ -1,42 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const timetable = [
-    ['Monday', 'Data Structures', 'Operating Systems', 'Library / Study Hall', 'Web Engineering'],
-    ['Tuesday', 'Database Systems', 'Computer Networks', 'Sports & Wellness', 'Data Structures Lab'],
-    ['Wednesday', 'Web Engineering', 'Database Systems', 'Project Studio', 'Operating Systems'],
-    ['Thursday', 'Computer Networks', 'Data Structures', 'Mentor Hour', 'Database Systems Lab'],
-    ['Friday', 'Operating Systems', 'Project Studio', 'Computer Networks', 'Open Elective'],
-    ['Saturday', 'Residence Assembly', 'Study Hall', 'Club Activities', 'Weekend Check-in'],
-];
-
 const cardClass = 'sketch-card p-5';
-
-export const WeeklyTimetable: React.FC = () => (
-    <StudentPageShell eyebrow="Resident schedule" title="Weekly timetable" description="Your planned academic and residence activities, Monday through Saturday.">
-        <div className="overflow-x-auto sketch-card p-4">
-            <table className="w-full min-w-[720px] text-left font-hand">
-                <thead>
-                    <tr className="border-b-2 border-[var(--sketch-border)] font-draft text-[var(--ink)]">
-                        <th className="p-3">Day</th>
-                        <th className="p-3">09:00</th>
-                        <th className="p-3">11:00</th>
-                        <th className="p-3">14:00</th>
-                        <th className="p-3">16:00</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {timetable.map(([day, ...sessions]) => (
-                        <tr key={day} className="border-b border-[var(--grid-line)] last:border-0">
-                            <th className="p-3 font-bold text-[var(--ink)]">{day}</th>
-                            {sessions.map((session) => <td key={session} className="p-3 text-slate-700">{session}</td>)}
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    </StudentPageShell>
-);
 
 export const NoticesPage: React.FC = () => (
     <StudentPageShell eyebrow="Residence desk" title="Notices & announcements" description="The latest updates from your warden and campus team.">

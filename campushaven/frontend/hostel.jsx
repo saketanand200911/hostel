@@ -15,32 +15,44 @@ function getLocalDateKey(date = new Date()) {
 const PALETTES = {
     boys: {
         primary: '#0f172a', secondary: '#1e293b', accent: '#f59e0b', ink: '#0f172a',
-        paper: '#FAF8F5', sketchBorder: '#0f172a', sketchShadow: '#0f172a', highlighter: '#fde68a'
+        paper: '#FAF8F5', paperCard: '#FFFDF9', gridLine: '#E7E2DA', sketchBorder: '#0f172a', sketchShadow: '#0f172a', highlighter: '#fde68a'
     },
     girls: {
-        primary: '#F8FAF7', secondary: '#F0F5EC', accent: '#84CC16', ink: '#14532D',
-        paper: '#F8FAF7', sketchBorder: 'rgba(74, 222, 128, 0.3)', sketchShadow: 'rgba(20, 83, 45, 0.08)', highlighter: '#FDE047'
+        primary: '#6B7280', secondary: '#858B93', accent: '#D8C3A5', ink: '#4B5563',
+        paper: '#FCF8F5', paperCard: '#FFFDFB', gridLine: '#E8D9D9', sketchBorder: '#D1D5DB', sketchShadow: 'rgba(75, 85, 99, 0.12)', highlighter: '#E9DFCF'
     }
+};
+
+const DARK_PALETTES = {
+    boys: { primary: '#121826', secondary: '#1D2738', accent: '#77B7E8', accentMuted: '#253B50', ink: '#F2F5FA', paper: '#121826', paperCard: '#1D2738', gridLine: '#303B4D', sketchBorder: '#344155', sketchShadow: 'rgba(0, 0, 0, 0.28)', highlighter: '#354458' },
+    girls: { primary: '#121826', secondary: '#1D2738', accent: '#B6A1F5', accentMuted: '#443B5C', ink: '#F2F5FA', paper: '#121826', paperCard: '#1D2738', gridLine: '#303B4D', sketchBorder: '#344155', sketchShadow: 'rgba(0, 0, 0, 0.28)', highlighter: '#443B5C' }
 };
 
 let currentGender = localStorage.getItem('campushaven_gender') || 'boys';
 let currentInstitution = localStorage.getItem('campushaven_institution') || 'hi-tech';
+let currentTheme = ['light', 'dark'].includes(localStorage.getItem('campushaven_theme'))
+    ? localStorage.getItem('campushaven_theme')
+    : 'light';
 let currentView = 'home';
 let currentLoginRole = 'student';
 let currentAuthMode = 'signin'; // 'signin' or 'signup'
 
 function applyThemeColors(gender) {
-    const p = PALETTES[gender];
+    const p = currentTheme === 'dark' ? DARK_PALETTES[gender] : PALETTES[gender];
     const root = document.documentElement;
     root.style.setProperty('--primary', p.primary);
     root.style.setProperty('--secondary', p.secondary);
     root.style.setProperty('--accent', p.accent);
+    root.style.setProperty('--accent-muted', p.accentMuted || 'rgba(251, 191, 36, 0.2)');
     root.style.setProperty('--ink', p.ink);
     root.style.setProperty('--paper', p.paper);
+    root.style.setProperty('--paper-card', p.paperCard);
+    root.style.setProperty('--grid-line', p.gridLine);
     root.style.setProperty('--sketch-border', p.sketchBorder);
     root.style.setProperty('--sketch-shadow', p.sketchShadow);
     root.style.setProperty('--highlighter', p.highlighter);
-
+    document.body.dataset.theme = currentTheme;
+    document.body.dataset.gender = gender;
     if (gender === 'girls') {
         document.body.classList.add('theme-girls');
         document.body.classList.remove('theme-boys');
@@ -49,11 +61,22 @@ function applyThemeColors(gender) {
         document.body.classList.remove('theme-girls');
     }
 
-    const instLabel = currentInstitution === 'hi-tech' ? 'Hi-Tech University' : 'Mirai Institute';
+    const instLabel = currentInstitution === 'hi-tech' ? 'Hi-Tech Institute of Engineering and Technology' : 'Mirai School of Technology';
     const wingLabel = gender === 'boys' ? "Boys' Wing" : "Girls' Wing";
 
     const navSub = document.getElementById('nav-subtitle');
     if (navSub) navSub.textContent = `${wingLabel} • ${instLabel}`;
+
+    document.querySelectorAll('[data-theme-option]').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.themeOption === currentTheme));
+    });
+}
+
+function setTheme(theme) {
+    if (!['light', 'dark'].includes(theme)) return;
+    currentTheme = theme;
+    localStorage.setItem('campushaven_theme', theme);
+    applyThemeColors(currentGender);
 }
 
 function updateGender(newGender) {
@@ -82,28 +105,6 @@ function switchMessTab(tab) {
         document.getElementById(`mess-subview-${name}`)?.classList.toggle('hidden', name !== tab);
         document.getElementById(`tab-mess-${name}`)?.classList.toggle('bg-[var(--accent)]', name === tab);
     });
-}
-
-async function uploadCalendarFile(input) {
-    const file = input.files && input.files[0];
-    const status = document.getElementById('calendar-upload-status');
-    if (!file || !status) return;
-
-    try {
-        const payload = JSON.parse(await file.text());
-        const response = await fetch(`${API_BASE_URL}/calendar`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        if (!response.ok) throw new Error('Upload failed');
-        status.textContent = 'Calendar saved. Date-specific menus will load automatically.';
-        await loadDateMenu();
-    } catch (error) {
-        status.textContent = 'Upload a valid calendar JSON file.';
-    } finally {
-        input.value = '';
-    }
 }
 
 async function loadDateMenu() {
@@ -184,7 +185,6 @@ function navigateTo(viewName) {
     });
     const activeNavBtn = document.getElementById(`navlink-${viewName}`);
     if (activeNavBtn) activeNavBtn.classList.add('bg-white', 'border-[var(--sketch-border)]');
-
     renderNavAuth();
     updateHomeGreeting();
 
@@ -464,48 +464,8 @@ function openModal(type) {
                         </div>
                     </form>
                 `;
-    } else if (type === 'feedback') {
-        title.textContent = '🍽️ Rate Today\'s Meal';
-        body.innerHTML = `
-                    <form onsubmit="handleMealFeedbackSubmit(event)" class="space-y-3 font-bold text-xs">
-                        <div>
-                            <span class="block mb-1">Star rating</span>
-                            <div class="flex items-center gap-1" role="radiogroup" aria-label="Meal rating">
-                                ${[1, 2, 3, 4, 5].map(rating => `<label class="cursor-pointer text-3xl leading-none"><input type="radio" name="meal-rating" value="${rating}" class="sr-only peer" ${rating === 4 ? 'checked' : ''} required><span class="text-slate-300 peer-checked:text-amber-500 hover:text-amber-400">★</span></label>`).join('')}
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block mb-1" for="meal-description">Description / suggestions</label>
-                            <textarea id="meal-description" rows="3" required placeholder="Tell us what you liked or what should improve..." class="w-full sketch-input px-3 py-2 text-sm font-bold"></textarea>
-                        </div>
-                        <div>
-                            <label class="block mb-1" for="meal-attachment">Upload a meal photo or document</label>
-                            <input id="meal-attachment" type="file" accept="image/*,.pdf,.txt" class="w-full sketch-input px-3 py-2 text-xs font-bold" />
-                        </div>
-                        <div class="flex gap-2 justify-end pt-2">
-                            <button type="button" onclick="closeModal()" class="px-4 py-2 sketch-btn bg-slate-100 text-slate-700">Cancel</button>
-                            <button type="submit" class="px-4 py-2 sketch-btn text-slate-900" style="background-color: var(--accent);">Submit Feedback</button>
-                        </div>
-                    </form>
-                `;
     }
     modal.classList.remove('hidden');
-}
-
-function handleMealFeedbackSubmit(e) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const rating = form.querySelector('input[name="meal-rating"]:checked').value;
-    const description = form.querySelector('#meal-description').value.trim();
-    const attachment = form.querySelector('#meal-attachment').files[0];
-    localStorage.setItem('campushaven_meal_feedback', JSON.stringify({
-        rating: Number(rating),
-        description,
-        attachmentName: attachment ? attachment.name : null,
-        submittedAt: new Date().toISOString()
-    }));
-    closeModal();
-    showAlert(`Thank you! Your ${rating}-star meal feedback${attachment ? ' and attachment' : ''} was saved.`, 'success');
 }
 
 function closeModal() {
