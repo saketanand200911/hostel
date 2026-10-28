@@ -41,7 +41,8 @@ async function connectMongo() {
   if (mongoDb) return mongoDb;
   if (!mongoConnectionPromise) {
     mongoConnectionPromise = MongoClient.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000
+      serverSelectionTimeoutMS: 5000,
+      family: 4
     }).then(client => {
       mongoDb = client.db(MONGODB_DB_NAME);
       logEvent('INFO', 'mongodb_connected', { database: MONGODB_DB_NAME });
