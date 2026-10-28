@@ -1220,7 +1220,28 @@ function showAlert(msg, type = 'info') {
     setTimeout(() => { box.classList.add('hidden'); }, 5000);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+async function handleEmailAuthToken() {
+    const params = new URLSearchParams(window.location.search);
+    const authToken = params.get('auth_token');
+    if (!authToken || !backendIsAvailable()) return false;
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/session?token=${encodeURIComponent(authToken)}`);
+        const data = await response.json();
+        if (!response.ok || !data.user || !data.token) throw new Error(data.message || 'This sign-in link is invalid.');
+        localStorage.setItem('campushaven_user', JSON.stringify(data.user));
+        localStorage.setItem('campushaven_token', data.token);
+        window.history.replaceState({}, document.title, window.location.pathname || '/');
+        showAlert(`Welcome back, ${data.user.name}!`, 'success');
+        return true;
+    } catch (error) {
+        window.history.replaceState({}, document.title, window.location.pathname || '/');
+        showAlert(error.message || 'This sign-in link could not be used.', 'warning');
+        return false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await handleEmailAuthToken();
     document.getElementById('global-gender-select').value = currentGender;
     applyThemeColors(currentGender);
     renderNavAuth();

@@ -409,6 +409,27 @@ async function sendWelcomeEmail(user) {
   return true;
 }
 
+function getPublicAppUrl() {
+  return String(process.env.PUBLIC_APP_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL || 'https://campushaven-eight.vercel.app').replace(/\/$/, '');
+}
+
+async function sendLoginEmail(user, token, returning = true) {
+  if (!user?.email || !token) return false;
+  const transport = getMailTransport();
+  if (!transport) return false;
+  const loginUrl = `${getPublicAppUrl()}/?auth_token=${encodeURIComponent(token)}`;
+  const subject = returning ? 'Welcome back to CampusHaven' : 'Welcome to CampusHaven';
+  const greeting = returning ? `Welcome back, ${user.name}!` : `Welcome to CampusHaven, ${user.name}!`;
+  await transport.sendMail({
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to: user.email,
+    subject,
+    text: `${greeting}\n\nOpen CampusHaven already signed in: ${loginUrl}\n\nThis sign-in link expires in 7 days.`,
+    html: `<p>${greeting}</p><p><a href="${loginUrl}">Open CampusHaven already signed in</a></p><p>This sign-in link expires in 7 days.</p>`
+  });
+  return true;
+}
+
 // Sample rooms dataset per floor, gender, institution, and occupancy
 const sampleRooms = [
   // Ground Floor (GF)
@@ -487,12 +508,12 @@ app.post('/api/auth/signup', async (req, res) => {
       throw error;
     }
     user._id = result.insertedId;
-    const welcomeEmailSent = await sendWelcomeEmail(user);
+    const token = await issueAuthToken(database, user);
+    const welcomeEmailSent = await sendLoginEmail(user, token, false);
     if (welcomeEmailSent) {
       user.welcomeEmailSentAt = new Date();
       await users.updateOne({ _id: user._id }, { $set: { welcomeEmailSentAt: user.welcomeEmailSentAt } });
     }
-    const token = await issueAuthToken(database, user);
     res.status(201).json({ user: toPublicUser(user), token, welcomeEmailSent });
   } catch (error) {
     logEvent('ERROR', 'signup_failed', { error: error.message });
@@ -526,13 +547,12 @@ app.post('/api/auth/login', async (req, res) => {
         message: `This account is registered as ${user.role}. Select the matching role or contact an administrator.`
       });
     }
-    const isFirstLogin = !user.welcomeEmailSentAt;
     await users.updateOne({ _id: user._id }, { $set: { lastLoginAt: new Date() } });
-    const welcomeEmailSent = isFirstLogin && await sendWelcomeEmail(user);
+    const token = await issueAuthToken(database, user);
+    const welcomeEmailSent = await sendLoginEmail(user, token, true);
     if (welcomeEmailSent) {
       await users.updateOne({ _id: user._id }, { $set: { welcomeEmailSentAt: new Date() } });
     }
-    const token = await issueAuthToken(database, user);
     res.json({ user: toPublicUser(user), token, welcomeEmailSent });
   } catch (error) {
     logEvent('ERROR', 'login_failed', { error: error.message });
@@ -541,6 +561,22 @@ app.post('/api/auth/login', async (req, res) => {
         ? 'The account database is temporarily unavailable. Please try again shortly.'
         : error.message
     });
+  }
+});
+
+app.get('/api/auth/session', async (req, res) => {
+  const token = typeof req.query.token === 'string' ? req.query.token : '';
+  if (!token) return res.status(401).json({ message: 'Sign-in link is missing.' });
+  try {
+    const database = await requireMongo();
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const session = await database.collection('authSessions').findOne({ tokenHash, expiresAt: { $gt: new Date() } });
+    if (!session) return res.status(401).json({ message: 'This sign-in link has expired. Please sign in again.' });
+    const user = await database.collection('users').findOne({ _id: session.userId });
+    if (!user) return res.status(401).json({ message: 'This account could not be found.' });
+    res.json({ user: toPublicUser(user), token });
+  } catch (error) {
+    res.status(isMongoUnavailable(error) ? 503 : 500).json({ message: 'Could not restore this sign-in session.' });
   }
 });
 
@@ -599,7 +635,8 @@ app.get('/api/auth/google/callback', async (req, res) => {
     const { user: storedUser, isFirstLogin } = await upsertGoogleUser(profile, session.role);
     const database = await requireMongo();
     const user = toPublicUser(storedUser);
-    const welcomeEmailSent = (isFirstLogin || !storedUser.welcomeEmailSentAt) && await sendWelcomeEmail(user);
+    const token = await issueAuthToken(database, storedUser);
+    const welcomeEmailSent = await sendLoginEmail(user, token, !isFirstLogin);
     if (welcomeEmailSent) {
       await database.collection('users').updateOne(
         { _id: storedUser._id },
@@ -607,7 +644,6 @@ app.get('/api/auth/google/callback', async (req, res) => {
       );
     }
     const loginToken = crypto.randomBytes(32).toString('hex');
-    const token = await issueAuthToken(database, storedUser);
     googleSessions.set(loginToken, { user, token, welcomeEmailSent, createdAt: Date.now() });
     res.redirect(`${session.returnTo}${session.returnTo.includes('?') ? '&' : '?'}google_session=${loginToken}`);
   } catch (error) {
