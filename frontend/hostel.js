@@ -427,7 +427,25 @@ function updateMealStatuses() {
     });
 }
 
+function toggleMobileMenu() {
+    const menu = document.getElementById('mobile-nav-menu');
+    const toggle = document.getElementById('mobile-menu-toggle');
+    if (!menu || !toggle) return;
+    const isOpen = menu.classList.toggle('mobile-menu-open');
+    toggle.setAttribute('aria-expanded', String(isOpen));
+    toggle.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+    toggle.textContent = isOpen ? '✕' : '☰';
+}
+
 function navigateTo(viewName) {
+    const menu = document.getElementById('mobile-nav-menu');
+    const toggle = document.getElementById('mobile-menu-toggle');
+    if (menu?.classList.contains('mobile-menu-open')) menu.classList.remove('mobile-menu-open');
+    if (toggle) {
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', 'Open navigation menu');
+        toggle.textContent = '☰';
+    }
     const user = getAuthUser();
     const isStaff = ['admin', 'warden'].includes(user?.role);
     if (viewName === 'timetable') viewName = 'home';

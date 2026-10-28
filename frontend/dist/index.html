@@ -102,6 +102,10 @@
                     <span class="hidden md:inline font-mono-draft text-[10px] tracking-wider uppercase">3D FX</span>
                 </button>
 
+                <button id="mobile-menu-toggle" onclick="toggleMobileMenu()"
+                    class="md:hidden px-3 py-2 rounded-lg sketch-btn text-xl leading-none" aria-label="Open navigation menu"
+                    aria-expanded="false">☰</button>
+
                 <div id="nav-auth-container">
                     <!-- Rendered via JS -->
                 </div>
@@ -109,28 +113,24 @@
         </div>
 
         <!-- Mobile Navigation Strip -->
-        <div
-            class="md:hidden flex items-center gap-1 overflow-x-auto px-4 py-2 border-t border-[var(--sketch-border)] bg-[var(--paper)] text-[11px] font-bold">
+        <div id="mobile-nav-menu"
+            class="hidden md:hidden flex-col gap-0 border-t border-[var(--sketch-border)] bg-[var(--paper)] text-sm font-bold">
             <button onclick="navigateTo('home')"
-                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🏠 Home</button>
+                class="mobile-nav-item">🏠 Home</button>
             <button onclick="navigateTo('pass')" id="mobile-navlink-pass"
-                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🚶
-                Outings</button>
+                class="mobile-nav-item">🚶 Outings</button>
             <button onclick="navigateTo('mess')"
-                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🍽️ Food
-                Menu</button>
+                class="mobile-nav-item">🍽️ Food Menu</button>
             <button onclick="navigateTo('repairs')" id="mobile-navlink-repairs"
-                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🔧 Fix
-                Issue</button>
+                class="mobile-nav-item">🔧 Fix Issue</button>
             <button onclick="navigateTo('packages')"
-                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">📦
-                Deliveries</button>
+                class="mobile-nav-item">📦 Deliveries</button>
             <button onclick="navigateTo('emergency')"
-                class="px-2.5 py-1 rounded-md bg-red-100 border border-red-500 text-red-800 shrink-0">🆘 SOS</button>
+                class="mobile-nav-item">🆘 SOS</button>
             <button onclick="navigateTo('rules')"
-                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">📜 Rules</button>
+                class="mobile-nav-item">📜 Rules</button>
             <button onclick="navigateTo('outing-log')" id="mobile-navlink-outing-log"
-                class="hidden px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">📋 Outing Log</button>
+                class="hidden mobile-nav-item">📋 Outing Log</button>
         </div>
     </header>
 
