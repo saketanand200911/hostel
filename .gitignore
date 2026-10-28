@@ -7,11 +7,12 @@ node_modules/
 *.env
 backend/.env
 
-# Build caches
+# Build caches & deployments
 .vite/
 .cache/
+.vercel/
 
-# OS generated files
+# OS generated & duplicate files
 .DS_Store
 .DS_Store?
 ._*
@@ -19,9 +20,12 @@ backend/.env
 .Trashes
 ehthumbs.db
 Thumbs.db
+* 2.*
+* 3.*
+* 2
+* 3
 
 # Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.vercel

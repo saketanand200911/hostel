@@ -157,12 +157,26 @@ function renderDateMenu(menu) {
 
 const PALETTES = {
     boys: {
-        primary: '#090d16', secondary: '#131b2e', accent: '#f59e0b', ink: '#f8fafc',
-        paper: '#090d16', paperCard: '#131b2e', sketchBorder: '#2a3854', sketchShadow: 'rgba(0, 0, 0, 0.55)', highlighter: '#78350f'
+        primary: '#090d16',
+        secondary: 'rgba(15, 23, 42, 0.45)',
+        accent: '#f59e0b',
+        ink: '#f8fafc',
+        paper: '#090d16',
+        paperCard: 'rgba(11, 18, 33, 0.35)',
+        sketchBorder: 'rgba(255, 255, 255, 0.08)',
+        sketchShadow: 'rgba(0, 0, 0, 0.3)',
+        highlighter: 'rgba(245, 158, 11, 0.2)'
     },
     girls: {
-        primary: '#07150e', secondary: '#0d2417', accent: '#4ade80', ink: '#f0fdf4',
-        paper: '#07150e', paperCard: '#0d2417', sketchBorder: 'rgba(74, 222, 128, 0.28)', sketchShadow: 'rgba(0, 0, 0, 0.55)', highlighter: 'rgba(74, 222, 128, 0.18)'
+        primary: '#090d16',
+        secondary: 'rgba(15, 23, 42, 0.45)',
+        accent: '#f59e0b',
+        ink: '#f8fafc',
+        paper: '#090d16',
+        paperCard: 'rgba(11, 18, 33, 0.35)',
+        sketchBorder: 'rgba(255, 255, 255, 0.08)',
+        sketchShadow: 'rgba(0, 0, 0, 0.3)',
+        highlighter: 'rgba(245, 158, 11, 0.2)'
     }
 };
 

@@ -1,25 +1,25 @@
 /* ================================================
-   CampusHaven – Dark Mode Native Stylesheet
-   Interactive 3D Tubes Cursor Background & High-Contrast Light Fonts
+   CampusHaven – Liquid Glassmorphism Stylesheet
+   Translucent Frosted Glass UI & Neon Cursor Atmosphere
    ================================================ */
 
-/* --- CSS Custom Properties (Permanent Dark Mode) --- */
+/* --- CSS Custom Properties (Dark Translucent Glass) --- */
 :root,
 [data-theme="dark"],
 body {
     --primary: #090d16;
-    --secondary: #131b2e;
+    --secondary: rgba(15, 23, 42, 0.45);
     --accent: #f59e0b;
     --accent-muted: rgba(245, 158, 11, 0.25);
     --ink: #f8fafc;
     --ink-muted: #cbd5e1;
     --paper: #090d16;
-    --paper-card: #131b2e;
-    --grid-line: rgba(51, 65, 85, 0.35);
-    --sketch-border: #334155;
-    --sketch-shadow: rgba(0, 0, 0, 0.55);
-    --highlighter: #78350f;
-    --border-glow: rgba(245, 158, 11, 0.35);
+    --paper-card: rgba(11, 18, 33, 0.35);
+    --grid-line: rgba(255, 255, 255, 0.02);
+    --sketch-border: rgba(255, 255, 255, 0.08);
+    --sketch-shadow: rgba(0, 0, 0, 0.3);
+    --highlighter: rgba(245, 158, 11, 0.2);
+    --border-glow: rgba(255, 255, 255, 0.12);
 }
 
 /* ================================================
@@ -38,20 +38,15 @@ body {
     margin: 0;
     padding: 0;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: var(--paper);
+    background-color: #090d16;
     color: var(--ink);
     min-height: 100vh;
     transition: background-color 0.3s ease, color 0.3s ease;
-    background-image:
-        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-    background-size: 28px 28px;
-    background-attachment: fixed;
     overflow-x: hidden;
     position: relative;
 }
 
-/* Content layers above 3D WebGL background */
+/* Content layers float above 3D WebGL background */
 body > header,
 body > main,
 body > footer,
@@ -59,6 +54,11 @@ body > #global-alert-box,
 body > #quick-action-modal {
     position: relative;
     z-index: 10;
+}
+
+/* Hide legacy washi tape in dark glass mode */
+.washi-tape {
+    display: none !important;
 }
 
 /* ================================================
@@ -87,22 +87,19 @@ body > #quick-action-modal {
     opacity: 1;
 }
 
-/* When tubes are active, disable static grid to let 3D tubes pop */
-body.tubes-active {
-    background-image: none !important;
-}
-
 /* ================================================
    TYPOGRAPHY & LIGHT FONT RULES (HIGH CONTRAST)
    ================================================ */
 h1, h2, h3, h4, h5, h6 {
-    color: #f8fafc !important;
+    color: #ffffff !important;
     font-weight: 800;
     letter-spacing: -0.02em;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85), 0 0 1px rgba(0, 0, 0, 0.9);
 }
 
 p, span, label, li, td, th {
     color: #cbd5e1;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.75);
 }
 
 .font-hand {
@@ -114,7 +111,7 @@ p, span, label, li, td, th {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     font-weight: 800;
     letter-spacing: -0.015em;
-    color: #f8fafc;
+    color: #ffffff;
 }
 
 .font-mono-draft {
@@ -122,12 +119,15 @@ p, span, label, li, td, th {
     color: #cbd5e1;
 }
 
-/* Text glow / crisp legibility over 3D background */
-body.tubes-active h1,
-body.tubes-active h2,
-body.tubes-active h3,
-body.tubes-active h4 {
-    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.85), 0 0 2px rgba(0, 0, 0, 0.9);
+/* Text inside cards */
+.sketch-card h1, .sketch-card h2, .sketch-card h3, .sketch-card h4 {
+    color: #ffffff !important;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
+}
+
+.sketch-card p, .sketch-card span {
+    color: #cbd5e1;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
 }
 
 /* Force Light Colors on Tailwind Text Utility Overrides */
@@ -190,110 +190,149 @@ body.tubes-active h4 {
     color: #d8b4fe !important;
 }
 
+/* Greeting message text */
+#home-greeting {
+    color: #4ade80 !important;
+    text-shadow: 0 0 12px rgba(74, 222, 128, 0.4);
+}
+
 /* ================================================
-   SKETCH CARDS & BOXES (FROSTED GLASS DARK MODE)
+   LIQUID GLASSMORPHISM CARDS & CONTAINERS
    ================================================ */
 .sketch-card,
 [class*="sketch-card"] {
-    background-color: rgba(19, 27, 46, 0.88) !important;
-    backdrop-filter: blur(16px) saturate(160%) !important;
-    -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
-    border: 2px solid #2a3854 !important;
-    border-radius: 16px !important;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 4px 10px -2px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(11, 18, 33, 0.35) !important;
+    backdrop-filter: blur(24px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.16) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .sketch-card:hover {
-    transform: translateY(-3px) scale(1.003) !important;
-    border-color: var(--accent) !important;
-    box-shadow: 0 16px 35px -5px rgba(0, 0, 0, 0.7), 0 0 20px -3px var(--accent-muted), inset 0 1px 1px rgba(255, 255, 255, 0.12) !important;
+    transform: translateY(-3px) scale(1.004) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(11, 18, 33, 0.45) !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+    border-top-color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 16px 40px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.16), 0 0 25px -5px rgba(245, 158, 11, 0.2) !important;
 }
 
 .sketch-box {
-    background-color: rgba(15, 23, 42, 0.82) !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-    border: 2px solid #334155 !important;
-    border-radius: 12px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
     transition: all 0.2s ease;
 }
 
 .sketch-box:hover {
-    border-color: var(--accent) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
 }
 
 .bg-white {
-    background-color: rgba(19, 27, 46, 0.88) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(11, 18, 33, 0.35) !important;
 }
 
-/* Category card background tints in dark mode */
+/* Category cards translucent glass tints */
 .bg-amber-50\/50,
 .bg-amber-50,
 .bg-amber-100\/70,
 .bg-amber-100 {
-    background-color: rgba(245, 158, 11, 0.12) !important;
-    border-color: rgba(245, 158, 11, 0.3) !important;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.07) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(11, 18, 33, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: 1px solid rgba(245, 158, 11, 0.24) !important;
 }
 
 .bg-emerald-50\/50,
 .bg-emerald-50,
 .bg-emerald-100\/70,
 .bg-emerald-100 {
-    background-color: rgba(16, 185, 129, 0.12) !important;
-    border-color: rgba(16, 185, 129, 0.3) !important;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.07) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(11, 18, 33, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: 1px solid rgba(16, 185, 129, 0.24) !important;
 }
 
 .bg-blue-50\/50,
 .bg-blue-50,
 .bg-blue-100\/70,
 .bg-blue-100 {
-    background-color: rgba(59, 130, 246, 0.12) !important;
-    border-color: rgba(59, 130, 246, 0.3) !important;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.07) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(11, 18, 33, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: 1px solid rgba(59, 130, 246, 0.24) !important;
 }
 
 .bg-purple-50\/50,
 .bg-purple-50,
 .bg-purple-100\/70,
 .bg-purple-100 {
-    background-color: rgba(168, 85, 247, 0.12) !important;
-    border-color: rgba(168, 85, 247, 0.3) !important;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.07) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(11, 18, 33, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: 1px solid rgba(168, 85, 247, 0.24) !important;
 }
 
 .bg-rose-50\/50,
 .bg-rose-50,
 .bg-rose-100\/70,
 .bg-rose-100 {
-    background-color: rgba(244, 63, 94, 0.12) !important;
-    border-color: rgba(244, 63, 94, 0.3) !important;
+    background: linear-gradient(135deg, rgba(244, 63, 94, 0.07) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(11, 18, 33, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: 1px solid rgba(244, 63, 94, 0.24) !important;
 }
 
 .bg-slate-50,
 .bg-slate-100,
 .bg-slate-200 {
-    background-color: rgba(30, 41, 59, 0.7) !important;
-    border-color: #334155 !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(11, 18, 33, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.16) !important;
 }
 
-/* Category Icons */
-.bg-amber-200 { background-color: rgba(245, 158, 11, 0.25) !important; border-color: #f59e0b !important; }
-.bg-emerald-200 { background-color: rgba(16, 185, 129, 0.25) !important; border-color: #10b981 !important; }
-.bg-blue-200 { background-color: rgba(59, 130, 246, 0.25) !important; border-color: #3b82f6 !important; }
-.bg-purple-200 { background-color: rgba(168, 85, 247, 0.25) !important; border-color: #a855f7 !important; }
-.bg-rose-200 { background-color: rgba(244, 63, 94, 0.25) !important; border-color: #f43f5e !important; }
+/* Override any hardcoded card borders like border-rose-300 */
+.sketch-card.border-rose-300,
+.sketch-card[class*="border-rose"],
+.sketch-card[class*="border-amber"],
+.sketch-card[class*="border-emerald"] {
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+
+/* Card inner dividers */
+.sketch-card .border-t,
+.sketch-card .border-b,
+.border-\[var\(--sketch-border\)\],
+.border-\[var\(--grid-line\)\] {
+    border-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+/* Translucent Category Icons */
+.bg-amber-200,
+.bg-emerald-200,
+.bg-blue-200,
+.bg-purple-200,
+.bg-rose-200,
+.bg-slate-200 {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+}
 
 /* Status Badges */
 .bg-emerald-100 {
     background-color: rgba(16, 185, 129, 0.22) !important;
     color: #86efac !important;
-    border: 1px solid rgba(16, 185, 129, 0.4) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
 }
 
 .bg-amber-100 {
     background-color: rgba(245, 158, 11, 0.22) !important;
     color: #fde047 !important;
-    border: 1px solid rgba(245, 158, 11, 0.4) !important;
+    border: 1px solid rgba(245, 158, 11, 0.3) !important;
 }
 
 /* ================================================
@@ -302,9 +341,9 @@ body.tubes-active h4 {
 .sketch-btn {
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-weight: 800;
-    border: 2px solid var(--sketch-border);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
     transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     text-transform: none;
@@ -312,7 +351,7 @@ body.tubes-active h4 {
 
 .sketch-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
 }
 
 .sketch-btn:active {
@@ -325,9 +364,11 @@ body.tubes-active h4 {
 select.sketch-input,
 input.sketch-input,
 textarea.sketch-input {
-    background-color: #0b1220 !important;
-    color: #f8fafc !important;
-    border: 2px solid #334155 !important;
+    background-color: rgba(11, 18, 33, 0.45) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 12px !important;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
     transition: all 0.2s ease !important;
@@ -338,29 +379,29 @@ select.sketch-input:focus,
 input.sketch-input:focus,
 textarea.sketch-input:focus {
     outline: none !important;
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 0 3px var(--accent-muted), inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+    border-color: rgba(245, 158, 11, 0.6) !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
 }
 
 .sketch-input::placeholder {
-    color: #64748b !important;
+    color: #94a3b8 !important;
 }
 
 /* ================================================
    HEADER, FOOTER & NAVIGATION
    =============================================== */
 #nav-header {
-    background-color: rgba(9, 13, 22, 0.88) !important;
-    backdrop-filter: blur(24px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-    border-bottom: 2px solid #2a3854 !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+    background-color: rgba(9, 13, 22, 0.45) !important;
+    backdrop-filter: blur(24px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4) !important;
 }
 
 #brand-logo {
     background-color: var(--accent) !important;
     color: #090d16 !important;
-    border: 2px solid #090d16 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
     box-shadow: 0 0 15px var(--accent-muted) !important;
 }
 
@@ -372,39 +413,47 @@ textarea.sketch-input:focus {
 #main-nav-links button {
     color: #cbd5e1;
     background: transparent;
+    border: 1px solid transparent;
     transition: all 0.2s ease;
 }
 
-#main-nav-links button:hover,
+#main-nav-links button:hover {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
 #main-nav-links button.bg-white {
-    background-color: rgba(30, 41, 59, 0.9) !important;
-    color: #f8fafc !important;
-    border-color: var(--accent) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%), rgba(11, 18, 33, 0.4) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
 /* Mobile Nav bar */
 #nav-header > div:nth-child(2) {
-    background-color: rgba(9, 13, 22, 0.95) !important;
-    border-top: 1px solid #2a3854 !important;
+    background-color: rgba(9, 13, 22, 0.6) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 #nav-header > div:nth-child(2) button {
-    background-color: #131b2e !important;
+    background-color: rgba(255, 255, 255, 0.04) !important;
     color: #cbd5e1 !important;
-    border-color: #334155 !important;
+    border: 1px solid rgba(255, 255, 255, 0.07) !important;
 }
 
 #nav-header > div:nth-child(2) button:hover {
-    color: #f8fafc !important;
-    border-color: var(--accent) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 /* Footer */
 footer {
-    background-color: rgba(9, 13, 22, 0.9) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
-    border-top: 2px solid #2a3854 !important;
+    background-color: rgba(9, 13, 22, 0.5) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
     color: #94a3b8 !important;
 }
 
@@ -416,14 +465,14 @@ footer a {
    3D TUBES TOGGLE BUTTON
    ================================================ */
 #tubes-toggle {
-    background-color: rgba(19, 27, 46, 0.9) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
     color: #f8fafc !important;
-    border: 2px solid #334155 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
     transition: all 0.2s ease;
 }
 
 #tubes-toggle:hover {
-    border-color: var(--accent) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
     box-shadow: 0 0 12px var(--accent-muted) !important;
 }
 
@@ -443,18 +492,18 @@ table {
 }
 
 th {
-    color: #f8fafc !important;
+    color: #ffffff !important;
     font-weight: 800;
-    border-color: #2a3854 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 td {
     color: #cbd5e1 !important;
-    border-color: #2a3854 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 tr:hover {
-    background-color: rgba(30, 41, 59, 0.45) !important;
+    background-color: rgba(255, 255, 255, 0.03) !important;
 }
 
 /* Weekly Table Headers */
@@ -482,14 +531,14 @@ thead tr.bg-\[var\(--accent\)\] th {
 body.theme-boys,
 body.theme-girls {
     --primary: #090d16;
-    --secondary: #131b2e;
+    --secondary: rgba(15, 23, 42, 0.45);
     --accent: #f59e0b;
     --accent-muted: rgba(245, 158, 11, 0.25);
     --ink: #f8fafc;
     --paper: #090d16;
-    --paper-card: #131b2e;
-    --sketch-border: #2a3854;
-    --highlighter: #78350f;
+    --paper-card: rgba(11, 18, 33, 0.35);
+    --sketch-border: rgba(255, 255, 255, 0.08);
+    --highlighter: rgba(245, 158, 11, 0.2);
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 
@@ -519,9 +568,9 @@ body.theme-girls #tubes-toggle.active {
    MODAL & ALERTS
    ================================================ */
 .modal-backdrop {
-    background: rgba(3, 7, 18, 0.82) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
+    background: rgba(3, 7, 18, 0.7) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
 }
 
 #global-alert-box .sketch-box {
@@ -550,8 +599,10 @@ body.theme-girls #tubes-toggle.active {
         top: 100%;
         z-index: 60;
         padding: 0;
-        border-top: 2px solid #2a3854;
-        background: rgba(9, 13, 22, 0.96);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(9, 13, 22, 0.85);
+        backdrop-filter: blur(24px) saturate(190%);
+        -webkit-backdrop-filter: blur(24px) saturate(190%);
     }
 
     #mobile-nav-menu.mobile-menu-open {
@@ -560,11 +611,11 @@ body.theme-girls #tubes-toggle.active {
 
     #mobile-nav-menu .mobile-nav-item {
         width: 100%;
-        min-height: 56px;
+        min-height: 52px;
         padding: 14px 24px !important;
         text-align: left;
         border: 0;
-        border-bottom: 1px solid #2a3854;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 0 !important;
         background: transparent !important;
         color: #cbd5e1 !important;
@@ -572,19 +623,14 @@ body.theme-girls #tubes-toggle.active {
     }
 
     #mobile-nav-menu .mobile-nav-item:hover {
-        background: rgba(30, 41, 59, 0.9) !important;
-        color: #f8fafc !important;
+        background: rgba(255, 255, 255, 0.08) !important;
+        color: #ffffff !important;
     }
 
     main {
         padding-left: 14px !important;
         padding-right: 14px !important;
         padding-top: 18px !important;
-    }
-
-    .sketch-card,
-    .sketch-box {
-        border-radius: 18px !important;
     }
 }
 
