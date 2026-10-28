@@ -947,12 +947,16 @@ initializeMongo().catch(error => {
   logEvent('ERROR', 'mongodb_initialization_failed', { error: error.message });
 });
 
-app.listen(PORT, () => {
-  logEvent('INFO', 'server_started', {
-    port: PORT,
-    loggingSink: {
-      name: LOG_SINK_NAME,
-      destination: LOG_SINK_DESTINATION || undefined
-    }
+if (require.main === module) {
+  app.listen(PORT, () => {
+    logEvent('INFO', 'server_started', {
+      port: PORT,
+      loggingSink: {
+        name: LOG_SINK_NAME,
+        destination: LOG_SINK_DESTINATION || undefined
+      }
+    });
   });
-});
+}
+
+module.exports = app;
