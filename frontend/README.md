@@ -6,7 +6,10 @@ CampusHaven is a student hostel management website for residents, wardens, and a
 
 - Resident, warden, and admin login flows with offline demo support
 - Personalized greeting after login
-- Digital QR gate pass with room and resident details
+- Outing submissions with destination, reason, planned departure, and personal history
+- Boys' 9:00 PM and girls' 7:00 PM curfews, with staff approval required for later outings and trips longer than 24 hours
+- Dedicated date-filtered, read-only outing log page for staff, with room, reason, and submission time
+- Admin-only roster showing which accounts currently have warden access
 - Daily food menu and weekly meal timetable
 - Meal feedback with star rating, description, and optional attachment
 - Date-aware menu selection using the `Asia/Kolkata` timezone
@@ -24,7 +27,7 @@ The directly openable website is made from three connected files:
 - `hostel.css` contains the custom styling and themes.
 - `hostel.js` contains the browser JavaScript for navigation, login, menus, QR passes, modals, and API calls.
 
-Open `index.html` directly in a browser for the standalone experience. The standalone page uses the backend at `http://localhost:4000/api` when opened as a local file.
+Open `index.html` directly in a browser for the standalone experience. The standalone page uses the backend at `http://localhost:4000/api` when opened as a local file. Offline demo sessions store outing records in that browser only; use authenticated backend sessions and MongoDB for records shared with wardens.
 
 ## React Frontend
 
@@ -54,6 +57,10 @@ npm start
 
 The server runs on `http://localhost:4000` by default.
 
+### Staff Accounts
+
+Staff roles are stored on the MongoDB user record and are never granted by choosing a role tab or signing in with a new Google account. An administrator must assign `role: "warden"` or `role: "admin"` to the authorized person's existing user record in the `users` collection. Manual login and Google login must use that same account identity and select its assigned role. Public sign-up only creates student accounts.
+
 ### Google Login and Welcome Email
 
 Google login uses the backend OAuth callback at:
@@ -75,17 +82,23 @@ export SMTP_FROM="CampusHaven <no-reply@example.com>"
 npm start
 ```
 
-After the user approves Google access, the backend verifies the Google profile, creates a one-time login session, and sends a welcome email to the verified Google email address. `SMTP_SECURE=true` can be used for SMTP providers that require TLS from connection start. Without Google or SMTP variables, the UI reports that the service is not configured rather than pretending a login or email succeeded.
+After the user approves Google access, the backend verifies that the Google email has an account with the selected role, creates a one-time login session, and sends a welcome email to the verified Google email address. Google sign-in does not promote new accounts to staff. `SMTP_SECURE=true` can be used for SMTP providers that require TLS from connection start. Without Google or SMTP variables, the UI reports that the service is not configured rather than pretending a login or email succeeded.
 
 ## Calendar and Menu API
 
 Useful endpoints:
 
-- `GET /api/health` checks server availability.
+- `GET /api/health` checks server and MongoDB availability, returning HTTP 503 if the account database cannot be reached.
 - `GET /api/time` returns the current date and time for `Asia/Kolkata`.
 - `GET /api/calendar` returns the saved calendar record.
 - `GET /api/calendar/menu?date=YYYY-MM-DD` returns the menu for a date.
 - `POST /api/calendar` saves calendar data and date-specific menus.
+- `POST /api/outpasses` records an outing with planned departure and return times; departures after curfew or trips longer than 24 hours are submitted for staff approval.
+- `GET /api/outpasses` returns the signed-in resident's records. Admins and wardens can use `?date=YYYY-MM-DD` on the dedicated Outing Log page to view a date's read-only records.
+- `PATCH /api/outpasses/:id/decision` lets an authenticated warden or admin approve or reject a pending outing.
+- `GET /api/admin/wardens` returns safe account details for warden accounts to authenticated admins only.
+
+Outpass endpoints require a valid `Authorization: Bearer <token>` session. The backend derives the resident's room and wing from their account, and stores submission dates and times in the `Asia/Kolkata` timezone.
 
 Example menu upload:
 

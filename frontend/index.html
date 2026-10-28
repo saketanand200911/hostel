@@ -8,8 +8,6 @@
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- QRCode.js CDN for standalone QR generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <!-- Google Identity Services for Google Auth -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
@@ -52,7 +50,7 @@
                 </button>
                 <button onclick="navigateTo('pass')" id="navlink-pass"
                     class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1">
-                    🎫 Gate Pass
+                    🚶 Outing Requests
                 </button>
                 <button onclick="navigateTo('mess')" id="navlink-mess"
                     class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1">
@@ -78,6 +76,10 @@
                     class="px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all flex items-center gap-1">
                     📜 Rules & FAQs
                 </button>
+                <button onclick="navigateTo('outing-log')" id="navlink-outing-log"
+                    class="hidden px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-[var(--sketch-border)] hover:bg-white transition-all items-center gap-1">
+                    📋 Outing Log
+                </button>
             </nav>
 
             <!-- Wing Selectors & Auth Profile -->
@@ -99,16 +101,16 @@
             class="md:hidden flex items-center gap-1 overflow-x-auto px-4 py-2 border-t border-[var(--sketch-border)] bg-[var(--paper)] text-[11px] font-bold">
             <button onclick="navigateTo('home')"
                 class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🏠 Home</button>
-            <button onclick="navigateTo('pass')"
-                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🎫
-                Outpass</button>
+            <button onclick="navigateTo('pass')" id="mobile-navlink-pass"
+                class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🚶
+                Outings</button>
             <button onclick="navigateTo('mess')"
                 class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🍽️ Food
                 Menu</button>
             <button onclick="navigateTo('timetable')"
                 class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🗓️
                 Timetable</button>
-            <button onclick="navigateTo('repairs')"
+            <button onclick="navigateTo('repairs')" id="mobile-navlink-repairs"
                 class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">🔧 Fix
                 Issue</button>
             <button onclick="navigateTo('packages')"
@@ -118,6 +120,8 @@
                 class="px-2.5 py-1 rounded-md bg-red-100 border border-red-500 text-red-800 shrink-0">🆘 SOS</button>
             <button onclick="navigateTo('rules')"
                 class="px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">📜 Rules</button>
+            <button onclick="navigateTo('outing-log')" id="mobile-navlink-outing-log"
+                class="hidden px-2.5 py-1 rounded-md bg-white border border-[var(--sketch-border)] shrink-0">📋 Outing Log</button>
         </div>
     </header>
 
@@ -146,7 +150,7 @@
                             Hey there! What do you need today?
                         </h1>
                         <p class="text-base text-slate-600 mt-2 font-hand font-bold">
-                            Tap any big card below to get your gate pass, check food menu, fix broken room items, or
+                            Tap any big card below to submit an outing entry, check food menu, fix broken room items, or
                             call warden.
                         </p>
                     </div>
@@ -154,10 +158,10 @@
                     <button onclick="navigateTo('pass')"
                         class="px-6 py-4 sketch-btn text-slate-900 text-base font-extrabold flex items-center gap-3 shrink-0 shadow-lg hover:scale-105"
                         style="background-color: var(--accent);">
-                        <span class="text-2xl">⚡</span>
+                        <span class="text-2xl">🚶</span>
                         <div class="text-left">
-                            <span class="block text-xs uppercase tracking-wider font-mono-draft">Instant 1-Click</span>
-                            <span>Open My Gate Pass</span>
+                            <span class="block text-xs uppercase tracking-wider font-mono-draft">Curfew-aware</span>
+                            <span>Submit Outing Details</span>
                         </div>
                     </button>
                 </div>
@@ -170,13 +174,12 @@
                         <div
                             class="w-12 h-12 rounded-xl bg-amber-200 border-2 border-[var(--sketch-border)] flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
                             🎫</div>
-                        <h3 class="text-lg font-black text-[var(--ink)] font-draft">Daily Outpass & Curfew</h3>
-                        <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">Show digital QR code at gate
-                            turnstiles or apply for overnight home leave.</p>
+                        <h3 class="text-lg font-black text-[var(--ink)] font-draft">Outing Requests & Curfew</h3>
+                        <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">Record your destination, reason, and return time. Late or longer-than-24-hour outings require staff approval.</p>
                     </div>
                     <div
                         class="mt-4 pt-3 border-t border-[var(--sketch-border)] flex items-center justify-between text-xs font-bold text-amber-800">
-                        <span>View QR Code</span>
+                        <span>Submit outing details</span>
                         <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
                     </div>
                 </div>
@@ -198,7 +201,7 @@
                     </div>
                 </div>
 
-                <div onclick="navigateTo('repairs')"
+                <div onclick="navigateTo('repairs')" id="home-repairs-card"
                     class="sketch-card p-6 bg-blue-50/50 hover:bg-blue-100/70 cursor-pointer flex flex-col justify-between group">
                     <div>
                         <div
@@ -256,7 +259,7 @@
                             class="w-12 h-12 rounded-xl bg-slate-200 border-2 border-[var(--sketch-border)] flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
                             📜</div>
                         <h3 class="text-lg font-black text-[var(--ink)] font-draft">Hostel Rules & FAQs</h3>
-                        <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">Curfew hours (10 PM), guest
+                        <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">Curfew hours vary by wing, guest
                             entry rules, quiet study hours explained simply.</p>
                     </div>
                     <div
@@ -276,12 +279,10 @@
                     <h2 class="text-2xl sm:text-3xl font-black font-draft text-[var(--ink)]">🗓️ Weekly Timetable</h2>
                     <p class="text-sm text-slate-600 mt-1 font-hand">Your academic and residence activities from Monday
                         to Saturday.</p>
-                    <div class="mt-3 flex flex-wrap items-center gap-2">
-                        <label for="standalone-calendar-upload"
-                            class="px-3 py-2 sketch-btn text-xs font-bold cursor-pointer">Upload calendar JSON</label>
-                        <input id="standalone-calendar-upload" type="file" accept="application/json,.json"
-                            class="sr-only" onchange="uploadCalendarFile(this)" />
-                        <span id="calendar-upload-status" class="text-xs font-bold text-emerald-700"></span>
+                    <div class="mt-3 sketch-card p-3 bg-white">
+                        <p class="text-xs font-bold text-[var(--ink)]">Official Menu Calendar</p>
+                        <p id="menu-calendar-document-status" class="mt-1 text-xs text-slate-500">Loading published menu calendar…</p>
+                        <a id="menu-calendar-document-link" href="menu-calendar.pdf" class="mt-2 inline-block text-xs font-bold text-blue-800 underline">Download weekly menu calendar (PDF)</a>
                     </div>
                 </div>
                 <button onclick="navigateTo('home')" class="px-3 py-1.5 sketch-btn bg-slate-100 text-xs font-bold">←
@@ -346,71 +347,51 @@
             </div>
         </section>
 
-        <!-- 2. GATE PASS VIEW -->
+        <!-- 2. OUTING REQUEST VIEW -->
         <section id="view-pass" class="hidden space-y-6 animate-fade-in">
             <div class="flex items-center justify-between">
                 <div>
                     <button onclick="navigateTo('home')"
                         class="text-xs font-bold text-slate-500 hover:text-black mb-1 flex items-center gap-1">← Back to
                         Home</button>
-                    <h2 class="text-2xl font-black font-draft text-[var(--ink)]">🎫 Gate Pass & Outpass Desk</h2>
+                    <h2 class="text-2xl font-black font-draft text-[var(--ink)]">🚶 Outing Requests</h2>
+                    <p class="text-xs text-slate-600 mt-1">Record where you are going and when you will return. After-curfew or longer-than-24-hour outings need staff approval.</p>
                 </div>
-                <button onclick="openModal('leave')" class="px-4 py-2 sketch-btn text-xs font-bold text-slate-900"
-                    style="background-color: var(--accent);">
-                    + Apply for Weekend Leave
-                </button>
             </div>
 
-            <div class="flex gap-2 border-b-2 border-[var(--sketch-border)] pb-2 font-bold text-xs">
-                <button onclick="switchPassTab('live')" id="tab-pass-live"
-                    class="px-4 py-2 rounded-xl subnav-tab-active">🟢 Live Digital QR Pass</button>
-                <button onclick="switchPassTab('history')" id="tab-pass-history"
-                    class="px-4 py-2 rounded-xl bg-white border border-[var(--sketch-border)]">📁 My Past
-                    Outpasses</button>
+            <div class="sketch-card p-4 bg-amber-50">
+                <h3 class="text-sm font-black text-amber-950">Curfew timings</h3>
+                <p class="text-xs text-slate-700 mt-1">Boys: 9:00 PM · Girls: 7:00 PM. Outings after curfew or lasting more than 24 hours are sent to staff for approval. Other outings are recorded without approval.</p>
             </div>
 
-            <div id="pass-subview-live" class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                <div
-                    class="md:col-span-6 sketch-card p-6 bg-white flex flex-col items-center justify-center text-center relative">
-                    <div class="washi-tape"></div>
-                    <span class="stamp-badge text-[11px] mb-3">✓ VERIFIED DORM PASS</span>
-                    <h3 class="text-xl font-black font-draft text-[var(--ink)]">Scan at Gate Turnstile</h3>
-                    <p class="text-xs text-slate-500 font-hand font-bold mb-4">Hold your phone screen against scanner at
-                        Main Gate</p>
-                    <div class="bg-white p-3 sketch-box mb-4">
-                        <div id="qrcode-container-pass"></div>
+            <form id="outpass-form" onsubmit="submitOutpass(event)" class="sketch-card p-5 bg-white space-y-4">
+                <h3 class="text-lg font-black font-draft text-[var(--ink)]">Where are you going?</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="outpass-destination" class="block text-xs font-bold mb-1">Destination</label>
+                        <input id="outpass-destination" required maxlength="120" class="sketch-input w-full px-3 py-2 text-sm" placeholder="e.g. City market" />
                     </div>
-                    <div class="w-full bg-[var(--paper)] sketch-box p-3 text-left text-xs font-mono-draft space-y-1.5">
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Student:</span>
-                            <strong id="pass-student-name">Alex Chen (Room GF-101)</strong>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Curfew Time:</span>
-                            <strong class="text-amber-700">10:00 PM IST Tonight</strong>
-                        </div>
+                    <div>
+                        <label for="outpass-departure" class="block text-xs font-bold mb-1">Planned departure (India time)</label>
+                        <input id="outpass-departure" type="datetime-local" required class="sketch-input w-full px-3 py-2 text-sm" />
+                    </div>
+                    <div>
+                        <label for="outpass-return" class="block text-xs font-bold mb-1">Planned return (India time)</label>
+                        <input id="outpass-return" type="datetime-local" required class="sketch-input w-full px-3 py-2 text-sm" />
                     </div>
                 </div>
-
-                <div class="md:col-span-6 space-y-4">
-                    <div class="sketch-card p-6 bg-amber-50">
-                        <h3 class="text-base font-bold font-draft text-amber-900 mb-2">💡 How Gate Passes Work:</h3>
-                        <ol
-                            class="text-xs font-hand font-bold text-sm text-slate-700 space-y-2 list-decimal list-inside">
-                            <li><strong>Day travel:</strong> Scan QR code at turnstile gate between 6 AM and 10 PM.</li>
-                            <li><strong>Overnight stay:</strong> Submit leave request for warden approval.</li>
-                            <li><strong>Late return:</strong> Guard verifies ID manually after curfew.</li>
-                        </ol>
-                    </div>
+                <div>
+                    <label for="outpass-reason" class="block text-xs font-bold mb-1">Reason for going out</label>
+                    <textarea id="outpass-reason" required maxlength="500" rows="3" class="sketch-input w-full px-3 py-2 text-sm" placeholder="Briefly explain why you are going"></textarea>
                 </div>
-            </div>
+                <p id="outpass-form-status" class="text-xs font-bold text-slate-600" role="status" aria-live="polite"></p>
+                <button id="outpass-submit-button" type="submit" class="px-4 py-2 sketch-btn text-xs font-bold text-slate-900" style="background-color: var(--accent);">Submit outing information</button>
+            </form>
 
-            <div id="pass-subview-history" class="hidden sketch-card p-6 bg-white space-y-3">
-                <h3 class="text-base font-bold font-draft text-[var(--ink)]">Past Outpasses & Leave Records</h3>
-                <div id="outpass-history-list" class="space-y-2 font-mono-draft text-xs">
-                    <!-- Dynamic -->
-                </div>
-            </div>
+            <section class="sketch-card p-5 bg-white space-y-3">
+                <h3 class="text-lg font-black font-draft text-[var(--ink)]">My outing entries</h3>
+                <div id="outpass-my-entries" class="space-y-3 text-sm" aria-live="polite"></div>
+            </section>
         </section>
 
         <!-- 3. MESS VIEW -->
@@ -1031,13 +1012,12 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-hand">
                 <div class="sketch-card p-6 bg-emerald-50 border-emerald-400 space-y-2">
                     <h3 class="text-lg font-black font-draft text-emerald-950">✅ Do's</h3>
-                    <p class="text-sm font-bold text-slate-800">• Scan QR code for entry & exit between 6 AM and 10 PM.
+                    <p class="text-sm font-bold text-slate-800">• Submit your outing destination and reason. Boys' curfew is 9 PM; girls' curfew is 7 PM.
                     </p>
                 </div>
                 <div class="sketch-card p-6 bg-rose-50 border-rose-400 space-y-2">
                     <h3 class="text-lg font-black font-draft text-rose-950">🚫 Don'ts</h3>
-                    <p class="text-sm font-bold text-slate-800">• No late entry without approved pass or warden
-                        notification.</p>
+                    <p class="text-sm font-bold text-slate-800">• Outings after curfew or lasting more than 24 hours require staff approval. Other outings are recorded without approval.</p>
                 </div>
             </div>
         </section>
@@ -1210,6 +1190,59 @@
                     <span class="block text-2xl font-black font-draft text-emerald-700">ACTIVE</span>
                 </div>
             </div>
+
+            <section id="admin-calendar-controls" class="hidden sketch-card p-5 bg-white space-y-4">
+                <div>
+                    <h3 class="text-lg font-black font-draft text-[var(--ink)]">Update Menu Calendar</h3>
+                    <p class="mt-1 text-xs text-slate-600">Upload a PDF or Word document for residents to download. You can also upload structured JSON to update the in-app meal listings.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <label for="admin-menu-document-upload" class="px-3 py-2 sketch-btn text-xs font-bold cursor-pointer">Upload PDF / Word calendar</label>
+                    <input id="admin-menu-document-upload" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="sr-only" onchange="uploadCalendarDocument(this)" />
+                    <span id="menu-document-upload-status" class="text-xs font-bold text-slate-600" role="status" aria-live="polite"></span>
+                </div>
+                <div class="flex flex-wrap items-center gap-3 border-t border-[var(--sketch-border)] pt-3">
+                    <label for="admin-calendar-json-upload" class="px-3 py-2 sketch-btn bg-slate-100 text-xs font-bold cursor-pointer">Upload meal data JSON</label>
+                    <input id="admin-calendar-json-upload" type="file" accept="application/json,.json" class="sr-only" onchange="uploadCalendarFile(this)" />
+                    <span id="calendar-upload-status" class="text-xs font-bold text-slate-600" role="status" aria-live="polite"></span>
+                </div>
+            </section>
+
+            <section id="admin-warden-roster" class="hidden sketch-card p-5 bg-white space-y-4">
+                <div class="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                        <h3 class="text-lg font-black font-draft text-[var(--ink)]">Warden access</h3>
+                        <p class="text-xs text-slate-600 mt-1">Accounts currently assigned the warden role. Passwords are never shown here.</p>
+                    </div>
+                    <button type="button" onclick="loadWardenAccounts()" class="px-3 py-2 sketch-btn text-xs font-bold">Refresh list</button>
+                </div>
+                <p id="admin-warden-status" class="text-xs font-bold text-slate-600" role="status" aria-live="polite"></p>
+                <div id="admin-warden-entries" class="grid gap-3 sm:grid-cols-2" aria-live="polite"></div>
+            </section>
+        </section>
+
+        <section id="view-outing-log" class="hidden space-y-6 animate-fade-in">
+            <div class="sketch-card p-6 bg-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <span class="stamp-badge text-[10px] mb-1">STAFF RECORDS</span>
+                    <h2 class="text-2xl font-black font-draft text-[var(--ink)]">Outing Log</h2>
+                    <p class="text-xs text-slate-600 mt-1">Live outing records for the selected submission date, including room, reason, and submission time.</p>
+                </div>
+                <button onclick="navigateTo('admin')" class="px-3 py-1.5 sketch-btn bg-slate-100 text-xs font-bold">← Back to dashboard</button>
+            </div>
+            <section class="sketch-card p-5 bg-white space-y-4">
+                <div class="flex flex-wrap items-end justify-between gap-3">
+                    <h3 class="text-lg font-black font-draft text-[var(--ink)]">Submitted outing records</h3>
+                    <div class="flex items-end gap-2">
+                        <label for="outpass-register-date" class="text-xs font-bold">Submission date
+                            <input id="outpass-register-date" type="date" class="sketch-input block px-2 py-1.5 text-xs mt-1" />
+                        </label>
+                        <button type="button" onclick="loadOutpassRegister()" class="px-3 py-2 sketch-btn text-xs font-bold">Refresh log</button>
+                    </div>
+                </div>
+                <p id="outpass-register-status" class="text-xs font-bold text-slate-600" role="status" aria-live="polite"></p>
+                <div id="outpass-register-entries" class="space-y-3 text-sm" aria-live="polite"></div>
+            </section>
         </section>
 
     </main>
@@ -1236,7 +1269,7 @@
     </footer>
 
     <!-- JAVASCRIPT APP LOGIC -->
-    <script src="hostel.js"></script>
+    <script src="hostel.js?v=staff-auth-cyan-v3"></script>
 </body>
 
 </html>
