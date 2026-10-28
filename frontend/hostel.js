@@ -157,12 +157,12 @@ function renderDateMenu(menu) {
 
 const PALETTES = {
     boys: {
-        primary: '#0f172a', secondary: '#1e293b', accent: '#f59e0b', ink: '#0f172a',
-        paper: '#FAF8F5', sketchBorder: '#0f172a', sketchShadow: '#0f172a', highlighter: '#fde68a'
+        primary: '#090d16', secondary: '#131b2e', accent: '#f59e0b', ink: '#f8fafc',
+        paper: '#090d16', paperCard: '#131b2e', sketchBorder: '#2a3854', sketchShadow: 'rgba(0, 0, 0, 0.55)', highlighter: '#78350f'
     },
     girls: {
-        primary: '#ECFEFF', secondary: '#CFFAFE', accent: '#06B6D4', ink: '#164E63',
-        paper: '#F0FDFF', sketchBorder: '#A5F3FC', sketchShadow: 'rgba(8, 145, 178, 0.16)', highlighter: '#CFFAFE'
+        primary: '#07150e', secondary: '#0d2417', accent: '#4ade80', ink: '#f0fdf4',
+        paper: '#07150e', paperCard: '#0d2417', sketchBorder: 'rgba(74, 222, 128, 0.28)', sketchShadow: 'rgba(0, 0, 0, 0.55)', highlighter: 'rgba(74, 222, 128, 0.18)'
     }
 };
 
@@ -185,13 +185,19 @@ function updateAuthSubtitle() {
 }
 
 function applyThemeColors(gender) {
-    const p = PALETTES[gender];
+    const p = PALETTES[gender] || PALETTES.boys;
     const root = document.documentElement;
+
+    // Enforce dark mode on body and html
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.body.setAttribute('data-theme', 'dark');
+
     root.style.setProperty('--primary', p.primary);
     root.style.setProperty('--secondary', p.secondary);
     root.style.setProperty('--accent', p.accent);
     root.style.setProperty('--ink', p.ink);
     root.style.setProperty('--paper', p.paper);
+    root.style.setProperty('--paper-card', p.paperCard);
     root.style.setProperty('--sketch-border', p.sketchBorder);
     root.style.setProperty('--sketch-shadow', p.sketchShadow);
     root.style.setProperty('--highlighter', p.highlighter);
@@ -323,6 +329,38 @@ async function loadCalendarDocument() {
     }
 }
 
+/**
+ * Downloads the weekly mess menu in PDF format.
+ * Triggers direct download of published / local menu-calendar.pdf.
+ */
+function downloadMenuPDF() {
+    const customLink = document.getElementById('menu-calendar-document-link');
+    const pdfUrl = (customLink && customLink.href && !customLink.href.endsWith('#') && customLink.href !== window.location.href)
+        ? customLink.href
+        : 'menu-calendar.pdf';
+
+    const wingLabel = currentGender === 'girls' ? "Girls" : "Boys";
+    const instLabel = currentInstitution === 'mirai' ? "Mirai" : "Hi-Tech";
+    const filename = `CampusHaven_${instLabel}_${wingLabel}_Weekly_Menu.pdf`;
+
+    const a = document.createElement('a');
+    a.href = pdfUrl;
+    a.download = filename;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    showAlert(`📥 Downloading ${wingLabel} Wing Weekly Menu PDF...`, 'success');
+}
+
+/**
+ * Opens a print-to-PDF view of the active weekly timetable.
+ */
+function printMenuPDF() {
+    window.print();
+}
+
 async function loadDateMenu(requestedDate) {
     const dateInput = document.getElementById('mess-menu-date');
     const date = requestedDate || dateInput?.value || getLocalDateKey();
@@ -392,6 +430,7 @@ function updateMealStatuses() {
 function navigateTo(viewName) {
     const user = getAuthUser();
     const isStaff = ['admin', 'warden'].includes(user?.role);
+    if (viewName === 'timetable') viewName = 'home';
     if (viewName === 'outing-log' && !isStaff) viewName = 'home';
     if (viewName === 'pass' && isStaff) viewName = 'admin';
     if (viewName === 'repairs' && isStaff) viewName = 'admin';
@@ -422,7 +461,6 @@ function navigateTo(viewName) {
         loadMyOutpasses();
     }
     if (viewName === 'mess') loadDateMenu();
-    if (viewName === 'timetable') loadCalendarDocument();
     const calendarControls = document.getElementById('admin-calendar-controls');
     calendarControls?.classList.toggle('hidden', !['admin', 'warden'].includes(user?.role));
     const wardenRoster = document.getElementById('admin-warden-roster');
@@ -831,10 +869,10 @@ function renderNavAuth() {
     if (auth) {
         container.innerHTML = `
                     <div class="flex items-center gap-1.5 font-bold text-xs">
-                        <button onclick="navigateTo('${auth.role === 'student' ? 'home' : 'admin'}')" class="px-2.5 py-1.5 rounded-lg bg-[var(--highlighter)] border border-[var(--sketch-border)]">
+                        <button onclick="navigateTo('${auth.role === 'student' ? 'home' : 'admin'}')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-amber-300 border border-[var(--sketch-border)] shadow-sm">
                             👤 ${auth.name.split(' ')[0]} (${auth.role})
                         </button>
-                        <button onclick="handleLogout()" class="px-2.5 py-1.5 rounded-lg bg-white border border-[var(--sketch-border)] hover:bg-red-50">
+                        <button onclick="handleLogout()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 border border-[var(--sketch-border)] hover:bg-red-950/60 hover:text-red-300 transition-colors">
                             Sign Out
                         </button>
                     </div>
@@ -871,15 +909,15 @@ function toggleAuthMode(mode) {
         nameContainer.classList.remove('hidden');
         submitBtn.textContent = '✓ Create Account & Sign In';
 
-        btnSignUp.className = 'flex-1 py-2 rounded-lg bg-[var(--accent)] text-slate-900 shadow-sm border border-[var(--sketch-border)]';
-        btnSignIn.className = 'flex-1 py-2 rounded-lg text-slate-600 hover:text-[var(--ink)]';
+        btnSignUp.className = 'flex-1 py-2 rounded-lg bg-[var(--accent)] text-slate-900 shadow-sm border border-[var(--sketch-border)] font-bold';
+        btnSignIn.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white font-bold';
     } else {
         title.textContent = 'Sign In to CampusHaven';
         nameContainer.classList.add('hidden');
         submitBtn.textContent = '✓ Enter CampusHaven Portal';
 
-        btnSignIn.className = 'flex-1 py-2 rounded-lg bg-[var(--accent)] text-slate-900 shadow-sm border border-[var(--sketch-border)]';
-        btnSignUp.className = 'flex-1 py-2 rounded-lg text-slate-600 hover:text-[var(--ink)]';
+        btnSignIn.className = 'flex-1 py-2 rounded-lg bg-[var(--accent)] text-slate-900 shadow-sm border border-[var(--sketch-border)] font-bold';
+        btnSignUp.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white font-bold';
     }
     updateAuthSubtitle();
 }
@@ -889,10 +927,11 @@ function setLoginRole(role) {
     updateAuthSubtitle();
     ['student', 'warden', 'admin'].forEach(r => {
         const btn = document.getElementById(`tab-role-${r}`);
+        if (!btn) return;
         if (r === role) {
-            btn.className = 'flex-1 py-1.5 rounded-lg capitalize bg-slate-200 text-slate-900 border border-[var(--sketch-border)] font-bold';
+            btn.className = 'flex-1 py-1.5 rounded-lg capitalize bg-slate-700 text-slate-100 border border-[var(--sketch-border)] font-bold shadow-sm';
         } else {
-            btn.className = 'flex-1 py-1.5 rounded-lg capitalize text-slate-600 hover:text-[var(--ink)]';
+            btn.className = 'flex-1 py-1.5 rounded-lg capitalize text-slate-400 hover:text-white font-medium';
         }
     });
 
@@ -1149,9 +1188,9 @@ function showAlert(msg, type = 'info') {
     const box = document.getElementById('global-alert-box');
     const content = document.getElementById('global-alert-content');
 
-    let bgClass = 'bg-white border-2 border-[var(--sketch-border)] text-[var(--ink)]';
-    if (type === 'success') bgClass = 'bg-emerald-50 border-2 border-emerald-700 text-emerald-950';
-    if (type === 'warning') bgClass = 'bg-amber-50 border-2 border-amber-700 text-amber-950';
+    let bgClass = 'bg-slate-900 border-2 border-slate-600 text-slate-100';
+    if (type === 'success') bgClass = 'bg-emerald-950/90 border-2 border-emerald-500 text-emerald-200';
+    if (type === 'warning') bgClass = 'bg-amber-950/90 border-2 border-amber-500 text-amber-200';
 
     content.className = `px-4 py-3 sketch-box flex items-center justify-between shadow-lg text-sm font-bold ${bgClass}`;
     content.innerHTML = `

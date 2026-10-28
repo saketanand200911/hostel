@@ -1,0 +1,587 @@
+/* ================================================
+   CampusHaven – Dark Mode Native Stylesheet
+   Interactive 3D Tubes Cursor Background & High-Contrast Light Fonts
+   ================================================ */
+
+/* --- CSS Custom Properties (Permanent Dark Mode) --- */
+:root,
+[data-theme="dark"],
+body {
+    --primary: #090d16;
+    --secondary: #131b2e;
+    --accent: #f59e0b;
+    --accent-muted: rgba(245, 158, 11, 0.25);
+    --ink: #f8fafc;
+    --ink-muted: #cbd5e1;
+    --paper: #090d16;
+    --paper-card: #131b2e;
+    --grid-line: rgba(51, 65, 85, 0.35);
+    --sketch-border: #334155;
+    --sketch-shadow: rgba(0, 0, 0, 0.55);
+    --highlighter: #78350f;
+    --border-glow: rgba(245, 158, 11, 0.35);
+}
+
+/* ================================================
+   BASE RESET & BODY
+   ================================================ */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    background-color: #090d16;
+    color-scheme: dark;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    background-image:
+        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 28px 28px;
+    background-attachment: fixed;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Content layers above 3D WebGL background */
+body > header,
+body > main,
+body > footer,
+body > #global-alert-box,
+body > #quick-action-modal {
+    position: relative;
+    z-index: 10;
+}
+
+/* ================================================
+   INTERACTIVE 3D TUBES BACKGROUND CANVAS
+   ================================================ */
+#tubes-bg-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+#tubes-bg-canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+    opacity: 0;
+    transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#tubes-bg-canvas.loaded {
+    opacity: 1;
+}
+
+/* When tubes are active, disable static grid to let 3D tubes pop */
+body.tubes-active {
+    background-image: none !important;
+}
+
+/* ================================================
+   TYPOGRAPHY & LIGHT FONT RULES (HIGH CONTRAST)
+   ================================================ */
+h1, h2, h3, h4, h5, h6 {
+    color: #f8fafc !important;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+p, span, label, li, td, th {
+    color: #cbd5e1;
+}
+
+.font-hand {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #e2e8f0;
+}
+
+.font-draft {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    color: #f8fafc;
+}
+
+.font-mono-draft {
+    font-family: 'Space Mono', monospace;
+    color: #cbd5e1;
+}
+
+/* Text glow / crisp legibility over 3D background */
+body.tubes-active h1,
+body.tubes-active h2,
+body.tubes-active h3,
+body.tubes-active h4 {
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.85), 0 0 2px rgba(0, 0, 0, 0.9);
+}
+
+/* Force Light Colors on Tailwind Text Utility Overrides */
+.text-slate-900,
+.text-slate-800,
+.text-slate-700 {
+    color: #f1f5f9 !important;
+}
+
+.text-slate-600,
+.text-slate-500 {
+    color: #cbd5e1 !important;
+}
+
+.text-slate-400 {
+    color: #94a3b8 !important;
+}
+
+.text-emerald-950,
+.text-emerald-900,
+.text-emerald-800 {
+    color: #86efac !important;
+}
+
+.text-emerald-700 {
+    color: #4ade80 !important;
+}
+
+.text-amber-950,
+.text-amber-900,
+.text-amber-800 {
+    color: #fde047 !important;
+}
+
+.text-amber-700 {
+    color: #fbbf24 !important;
+}
+
+.text-rose-950,
+.text-rose-900,
+.text-rose-800 {
+    color: #fda4af !important;
+}
+
+.text-rose-700 {
+    color: #fb7185 !important;
+}
+
+.text-blue-900,
+.text-blue-800 {
+    color: #93c5fd !important;
+}
+
+.text-blue-700 {
+    color: #60a5fa !important;
+}
+
+.text-purple-900,
+.text-purple-800 {
+    color: #d8b4fe !important;
+}
+
+/* ================================================
+   SKETCH CARDS & BOXES (FROSTED GLASS DARK MODE)
+   ================================================ */
+.sketch-card,
+[class*="sketch-card"] {
+    background-color: rgba(19, 27, 46, 0.88) !important;
+    backdrop-filter: blur(16px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+    border: 2px solid #2a3854 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 4px 10px -2px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease !important;
+}
+
+.sketch-card:hover {
+    transform: translateY(-3px) scale(1.003) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 16px 35px -5px rgba(0, 0, 0, 0.7), 0 0 20px -3px var(--accent-muted), inset 0 1px 1px rgba(255, 255, 255, 0.12) !important;
+}
+
+.sketch-box {
+    background-color: rgba(15, 23, 42, 0.82) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 2px solid #334155 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+    transition: all 0.2s ease;
+}
+
+.sketch-box:hover {
+    border-color: var(--accent) !important;
+}
+
+.bg-white {
+    background-color: rgba(19, 27, 46, 0.88) !important;
+}
+
+/* Category card background tints in dark mode */
+.bg-amber-50\/50,
+.bg-amber-50,
+.bg-amber-100\/70,
+.bg-amber-100 {
+    background-color: rgba(245, 158, 11, 0.12) !important;
+    border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+.bg-emerald-50\/50,
+.bg-emerald-50,
+.bg-emerald-100\/70,
+.bg-emerald-100 {
+    background-color: rgba(16, 185, 129, 0.12) !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.bg-blue-50\/50,
+.bg-blue-50,
+.bg-blue-100\/70,
+.bg-blue-100 {
+    background-color: rgba(59, 130, 246, 0.12) !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+.bg-purple-50\/50,
+.bg-purple-50,
+.bg-purple-100\/70,
+.bg-purple-100 {
+    background-color: rgba(168, 85, 247, 0.12) !important;
+    border-color: rgba(168, 85, 247, 0.3) !important;
+}
+
+.bg-rose-50\/50,
+.bg-rose-50,
+.bg-rose-100\/70,
+.bg-rose-100 {
+    background-color: rgba(244, 63, 94, 0.12) !important;
+    border-color: rgba(244, 63, 94, 0.3) !important;
+}
+
+.bg-slate-50,
+.bg-slate-100,
+.bg-slate-200 {
+    background-color: rgba(30, 41, 59, 0.7) !important;
+    border-color: #334155 !important;
+}
+
+/* Category Icons */
+.bg-amber-200 { background-color: rgba(245, 158, 11, 0.25) !important; border-color: #f59e0b !important; }
+.bg-emerald-200 { background-color: rgba(16, 185, 129, 0.25) !important; border-color: #10b981 !important; }
+.bg-blue-200 { background-color: rgba(59, 130, 246, 0.25) !important; border-color: #3b82f6 !important; }
+.bg-purple-200 { background-color: rgba(168, 85, 247, 0.25) !important; border-color: #a855f7 !important; }
+.bg-rose-200 { background-color: rgba(244, 63, 94, 0.25) !important; border-color: #f43f5e !important; }
+
+/* Status Badges */
+.bg-emerald-100 {
+    background-color: rgba(16, 185, 129, 0.22) !important;
+    color: #86efac !important;
+    border: 1px solid rgba(16, 185, 129, 0.4) !important;
+}
+
+.bg-amber-100 {
+    background-color: rgba(245, 158, 11, 0.22) !important;
+    color: #fde047 !important;
+    border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+
+/* ================================================
+   BUTTONS & INPUTS
+   ================================================ */
+.sketch-btn {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    border: 2px solid var(--sketch-border);
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    text-transform: none;
+}
+
+.sketch-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+}
+
+.sketch-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Inputs, Textareas, Selects */
+.sketch-input,
+select.sketch-input,
+input.sketch-input,
+textarea.sketch-input {
+    background-color: #0b1220 !important;
+    color: #f8fafc !important;
+    border: 2px solid #334155 !important;
+    border-radius: 12px !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+    transition: all 0.2s ease !important;
+}
+
+.sketch-input:focus,
+select.sketch-input:focus,
+input.sketch-input:focus,
+textarea.sketch-input:focus {
+    outline: none !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-muted), inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+}
+
+.sketch-input::placeholder {
+    color: #64748b !important;
+}
+
+/* ================================================
+   HEADER, FOOTER & NAVIGATION
+   =============================================== */
+#nav-header {
+    background-color: rgba(9, 13, 22, 0.88) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    border-bottom: 2px solid #2a3854 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+}
+
+#brand-logo {
+    background-color: var(--accent) !important;
+    color: #090d16 !important;
+    border: 2px solid #090d16 !important;
+    box-shadow: 0 0 15px var(--accent-muted) !important;
+}
+
+#nav-subtitle {
+    color: #cbd5e1 !important;
+}
+
+/* Nav links in header */
+#main-nav-links button {
+    color: #cbd5e1;
+    background: transparent;
+    transition: all 0.2s ease;
+}
+
+#main-nav-links button:hover,
+#main-nav-links button.bg-white {
+    background-color: rgba(30, 41, 59, 0.9) !important;
+    color: #f8fafc !important;
+    border-color: var(--accent) !important;
+}
+
+/* Mobile Nav bar */
+#nav-header > div:nth-child(2) {
+    background-color: rgba(9, 13, 22, 0.95) !important;
+    border-top: 1px solid #2a3854 !important;
+}
+
+#nav-header > div:nth-child(2) button {
+    background-color: #131b2e !important;
+    color: #cbd5e1 !important;
+    border-color: #334155 !important;
+}
+
+#nav-header > div:nth-child(2) button:hover {
+    color: #f8fafc !important;
+    border-color: var(--accent) !important;
+}
+
+/* Footer */
+footer {
+    background-color: rgba(9, 13, 22, 0.9) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-top: 2px solid #2a3854 !important;
+    color: #94a3b8 !important;
+}
+
+footer a {
+    color: var(--accent) !important;
+}
+
+/* ================================================
+   3D TUBES TOGGLE BUTTON
+   ================================================ */
+#tubes-toggle {
+    background-color: rgba(19, 27, 46, 0.9) !important;
+    color: #f8fafc !important;
+    border: 2px solid #334155 !important;
+    transition: all 0.2s ease;
+}
+
+#tubes-toggle:hover {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 12px var(--accent-muted) !important;
+}
+
+#tubes-toggle.active {
+    background: linear-gradient(135deg, #f59e0b, #ef4444) !important;
+    color: #090d16 !important;
+    border-color: #fbbf24 !important;
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.5) !important;
+}
+
+/* ================================================
+   TABLES & TIMETABLE (HIGH CONTRAST)
+   ================================================ */
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th {
+    color: #f8fafc !important;
+    font-weight: 800;
+    border-color: #2a3854 !important;
+}
+
+td {
+    color: #cbd5e1 !important;
+    border-color: #2a3854 !important;
+}
+
+tr:hover {
+    background-color: rgba(30, 41, 59, 0.45) !important;
+}
+
+/* Weekly Table Headers */
+thead tr.bg-\[var\(--accent\)\] {
+    background-color: var(--accent) !important;
+    color: #090d16 !important;
+}
+
+thead tr.bg-\[var\(--accent\)\] th {
+    color: #090d16 !important;
+    font-weight: 900 !important;
+}
+
+/* Tabs */
+.subnav-tab-active {
+    background-color: var(--accent) !important;
+    color: #090d16 !important;
+    font-weight: 900 !important;
+    box-shadow: 0 4px 12px var(--accent-muted) !important;
+}
+
+/* ================================================
+   HOSTEL THEME (UNIFIED ACROSS BOYS & GIRLS WINGS)
+   ================================================ */
+body.theme-boys,
+body.theme-girls {
+    --primary: #090d16;
+    --secondary: #131b2e;
+    --accent: #f59e0b;
+    --accent-muted: rgba(245, 158, 11, 0.25);
+    --ink: #f8fafc;
+    --paper: #090d16;
+    --paper-card: #131b2e;
+    --sketch-border: #2a3854;
+    --highlighter: #78350f;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+body.theme-boys .sketch-btn,
+body.theme-girls .sketch-btn {
+    background-color: #f59e0b !important;
+    color: #090d16 !important;
+    border-color: #fbbf24 !important;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3) !important;
+}
+
+body.theme-boys .sketch-btn:hover,
+body.theme-girls .sketch-btn:hover {
+    background-color: #fbbf24 !important;
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45) !important;
+}
+
+body.theme-boys #tubes-toggle.active,
+body.theme-girls #tubes-toggle.active {
+    background: linear-gradient(135deg, #f59e0b, #ef4444) !important;
+    color: #090d16 !important;
+    border-color: #fbbf24 !important;
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.5) !important;
+}
+
+/* ================================================
+   MODAL & ALERTS
+   ================================================ */
+.modal-backdrop {
+    background: rgba(3, 7, 18, 0.82) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+#global-alert-box .sketch-box {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* ================================================
+   MOBILE RESPONSIVENESS
+   ================================================ */
+@media (max-width: 640px) {
+    body {
+        padding-bottom: calc(76px + env(safe-area-inset-bottom));
+    }
+
+    #nav-header > div:first-child {
+        min-height: 60px;
+        height: auto;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+
+    #nav-header > div:nth-child(2) {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 60;
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+        border-top: 2px solid #2a3854;
+        background: rgba(9, 13, 22, 0.96);
+    }
+}
+
+/* ================================================
+   PRINT STYLESHEET (CLEAN PDF EXPORT OF MENU)
+   ================================================ */
+@media print {
+    #tubes-bg-container,
+    #nav-header,
+    footer,
+    #tubes-toggle,
+    #global-gender-select,
+    button {
+        display: none !important;
+    }
+
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+
+    .sketch-card,
+    .sketch-box {
+        background: #ffffff !important;
+        color: #000000 !important;
+        border: 1px solid #cccccc !important;
+        box-shadow: none !important;
+    }
+
+    h1, h2, h3, h4, p, span, td, th {
+        color: #000000 !important;
+    }
+}
