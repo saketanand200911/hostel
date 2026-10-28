@@ -237,12 +237,16 @@ function updateGender(newGender) {
     const globalSel = document.getElementById('global-gender-select');
     if (globalSel) globalSel.value = newGender;
     applyThemeColors(newGender);
+    renderPinnedServices();
+    updatePinButtons();
 }
 
 function updateInstitution(newInst) {
     currentInstitution = newInst;
     localStorage.setItem('campushaven_institution', newInst);
     applyThemeColors(currentGender);
+    renderPinnedServices();
+    updatePinButtons();
 }
 
 function switchMessTab(tab) {
@@ -439,6 +443,786 @@ function updateMealStatuses() {
                 ? 'px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold'
                 : 'px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold';
     });
+
+    // Also update pinned mess menu meal badges if visible
+    if (typeof updatePinnedMealBadges === 'function') {
+        updatePinnedMealBadges();
+    }
+}
+
+/* ========================================================
+   PINNED SERVICES SYSTEM (Per-Profile & Alternating Zigzag)
+   ======================================================== */
+
+function getProfileKey() {
+    const user = getAuthUser();
+    if (!user) return 'guest';
+    const raw = user.contact || user.id || user.email || user.identifier || user.name || 'guest';
+    return String(raw).toLowerCase().replace(/[^a-z0-9]/g, '_');
+}
+
+function getPinnedServices() {
+    const key = `campushaven_pinned_${getProfileKey()}`;
+    const saved = localStorage.getItem(key);
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) return parsed;
+        } catch (e) {
+            console.error('Failed to parse pinned services', e);
+        }
+    }
+    // Default: Food menu is pinned on dashboard top by default
+    const defaultPinned = ['mess'];
+    localStorage.setItem(key, JSON.stringify(defaultPinned));
+    return defaultPinned;
+}
+
+function setPinnedServices(pinnedList) {
+    const key = `campushaven_pinned_${getProfileKey()}`;
+    localStorage.setItem(key, JSON.stringify(pinnedList));
+    renderPinnedServices();
+    updatePinButtons();
+}
+
+function togglePinService(serviceId) {
+    const current = getPinnedServices();
+    let updated;
+    const isCurrentlyPinned = current.includes(serviceId);
+    if (isCurrentlyPinned) {
+        updated = current.filter(id => id !== serviceId);
+        showAlert(`Service unpinned from dashboard top.`, 'info');
+    } else {
+        updated = [...current, serviceId];
+        showAlert(`📌 Service pinned to dashboard top!`, 'success');
+    }
+    setPinnedServices(updated);
+}
+
+function updatePinButtons() {
+    const pinned = getPinnedServices();
+    const allServices = ['pass', 'mess', 'repairs', 'packages', 'emergency', 'rules'];
+    allServices.forEach(id => {
+        const btn = document.getElementById(`pin-btn-${id}`);
+        if (!btn) return;
+        const isPinned = pinned.includes(id);
+        btn.classList.toggle('pinned', isPinned);
+        if (isPinned) {
+            btn.innerHTML = `<span>📌</span> <span>Pinned</span>`;
+            btn.title = "Pinned to top - Click to unpin";
+            btn.setAttribute('aria-pressed', 'true');
+        } else {
+            btn.innerHTML = `<span>📍</span> <span>Pin</span>`;
+            btn.title = "Click to pin to top of dashboard";
+            btn.setAttribute('aria-pressed', 'false');
+        }
+    });
+}
+
+function getPinnedMealStatus(startHour, startMin, endHour, endMin) {
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: APP_TIME_ZONE,
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23'
+    }).formatToParts(now);
+    const hour = Number(parts.find(p => p.type === 'hour')?.value || now.getHours());
+    const min = Number(parts.find(p => p.type === 'minute')?.value || now.getMinutes());
+    const currentMinutes = hour * 60 + min;
+    const start = startHour * 60 + startMin;
+    const end = endHour * 60 + endMin;
+
+    if (currentMinutes >= start && currentMinutes <= end) {
+        return { text: 'LIVE NOW', class: 'px-2 py-0.5 rounded-full bg-emerald-500/25 text-emerald-300 border border-emerald-400/50 text-[10px] font-black animate-pulse' };
+    }
+    if (currentMinutes < start) {
+        return { text: 'UPCOMING', class: 'px-2 py-0.5 rounded-full bg-amber-500/25 text-amber-300 border border-amber-400/50 text-[10px] font-black' };
+    }
+    return { text: 'SERVED', class: 'px-2 py-0.5 rounded-full bg-slate-700/50 text-slate-400 border border-white/10 text-[10px] font-black' };
+}
+
+function updatePinnedMealBadges() {
+    const meals = [
+        { id: 'breakfast', startH: 7, startM: 30, endH: 9, endM: 30 },
+        { id: 'lunch', startH: 12, startM: 30, endH: 14, endM: 30 },
+        { id: 'snacks', startH: 16, startM: 30, endH: 17, endM: 30 },
+        { id: 'dinner', startH: 20, startM: 0, endH: 21, endM: 30 }
+    ];
+    meals.forEach(m => {
+        const el = document.getElementById(`pinned-status-${m.id}`);
+        if (el) {
+            const st = getPinnedMealStatus(m.startH, m.startM, m.endH, m.endM);
+            el.textContent = st.text;
+            el.className = st.class;
+        }
+    });
+}
+
+function renderPinnedServices() {
+    const container = document.getElementById('pinned-services-container');
+    if (!container) return;
+
+    const pinned = getPinnedServices();
+    if (!pinned || pinned.length === 0) {
+        container.innerHTML = '';
+        container.classList.add('hidden');
+        return;
+    }
+
+    container.classList.remove('hidden');
+
+    const wingLabel = currentGender === 'girls' ? "Girls' Wing" : "Boys' Wing";
+    const curfewTime = currentGender === 'girls' ? "8:00 PM" : "9:30 PM";
+    const todayWeekday = new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone: APP_TIME_ZONE }).format(new Date());
+    const todayDateFormatted = new Intl.DateTimeFormat('en-IN', {
+        timeZone: APP_TIME_ZONE,
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+    }).format(new Date());
+
+    const dayMenu = WEEKLY_MENU[todayWeekday] || WEEKLY_MENU['Monday'];
+
+    const bfStatus = getPinnedMealStatus(7, 30, 9, 30);
+    const lunchStatus = getPinnedMealStatus(12, 30, 14, 30);
+    const snackStatus = getPinnedMealStatus(16, 30, 17, 30);
+    const dinnerStatus = getPinnedMealStatus(20, 0, 21, 30);
+
+    const serviceDefinitions = {
+        mess: {
+            id: 'mess',
+            icon: '🍽️',
+            title: "Today's Mess Menu",
+            subtitle: `${wingLabel} • 4 Meals Daily`,
+            desc: "Nutritious balanced meals prepared fresh in campus kitchen. Check today's 4 courses, track live serving status, or download the full calendar PDF.",
+            navAction: "navigateTo('mess')",
+            navLabel: "Explore Full Mess Hub",
+            quickButtons: `
+                <button onclick="downloadMenuPDF()" class="w-full py-2 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
+                    <span>📥</span> <span>Download Weekly PDF</span>
+                </button>
+            `,
+            contentHtml: `
+                <div class="sketch-card p-5 sm:p-6 flex flex-col justify-between h-full relative overflow-hidden backdrop-blur-2xl">
+                    <div>
+                        <!-- Header -->
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-lg">🍽️</div>
+                                <div>
+                                    <h4 class="text-base sm:text-lg font-black text-white font-draft">${todayWeekday}'s Complete Food Menu</h4>
+                                    <p class="text-xs text-slate-400 font-mono-draft">${todayDateFormatted} • Common for Boys & Girls</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="downloadMenuPDF()" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1 transition-all">
+                                    <span>📥</span> <span>PDF</span>
+                                </button>
+                                <button onclick="openModal('feedback')" class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-bold flex items-center gap-1 transition-all">
+                                    <span>⭐</span> <span>Rate</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 4 Meals Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                            <!-- Breakfast -->
+                            <div class="sketch-box p-3.5 flex flex-col justify-between bg-white/[0.03] rounded-xl border border-white/10 hover:border-amber-500/30 transition-all">
+                                <div>
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <span class="text-xs font-black uppercase text-amber-300 tracking-wider font-mono-draft">☕ Breakfast</span>
+                                        <span id="pinned-status-breakfast" class="${bfStatus.class}">${bfStatus.text}</span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mb-2 font-mono-draft">07:30 – 09:30 AM</p>
+                                    <ul class="text-xs text-slate-200 space-y-1 font-bold">
+                                        ${dayMenu.breakfast.map(item => `<li class="flex items-start gap-1.5 leading-snug"><span class="text-amber-400/80 text-[10px]">•</span><span>${item}</span></li>`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Lunch -->
+                            <div class="sketch-box p-3.5 flex flex-col justify-between bg-white/[0.03] rounded-xl border border-white/10 hover:border-emerald-500/30 transition-all">
+                                <div>
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <span class="text-xs font-black uppercase text-emerald-300 tracking-wider font-mono-draft">🍛 Lunch</span>
+                                        <span id="pinned-status-lunch" class="${lunchStatus.class}">${lunchStatus.text}</span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mb-2 font-mono-draft">12:30 – 02:30 PM</p>
+                                    <ul class="text-xs text-slate-200 space-y-1 font-bold">
+                                        ${dayMenu.lunch.map(item => `<li class="flex items-start gap-1.5 leading-snug"><span class="text-emerald-400/80 text-[10px]">•</span><span>${item}</span></li>`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Snacks -->
+                            <div class="sketch-box p-3.5 flex flex-col justify-between bg-white/[0.03] rounded-xl border border-white/10 hover:border-blue-500/30 transition-all">
+                                <div>
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <span class="text-xs font-black uppercase text-blue-300 tracking-wider font-mono-draft">🥪 Snacks</span>
+                                        <span id="pinned-status-snacks" class="${snackStatus.class}">${snackStatus.text}</span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mb-2 font-mono-draft">04:30 – 05:30 PM</p>
+                                    <ul class="text-xs text-slate-200 space-y-1 font-bold">
+                                        ${dayMenu.snacks.map(item => `<li class="flex items-start gap-1.5 leading-snug"><span class="text-blue-400/80 text-[10px]">•</span><span>${item}</span></li>`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Dinner -->
+                            <div class="sketch-box p-3.5 flex flex-col justify-between bg-white/[0.03] rounded-xl border border-white/10 hover:border-purple-500/30 transition-all">
+                                <div>
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <span class="text-xs font-black uppercase text-purple-300 tracking-wider font-mono-draft">🍲 Dinner</span>
+                                        <span id="pinned-status-dinner" class="${dinnerStatus.class}">${dinnerStatus.text}</span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mb-2 font-mono-draft">08:00 – 09:30 PM</p>
+                                    <ul class="text-xs text-slate-200 space-y-1 font-bold">
+                                        ${dayMenu.dinner.map(item => `<li class="flex items-start gap-1.5 leading-snug"><span class="text-purple-400/80 text-[10px]">•</span><span>${item}</span></li>`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Status Bar -->
+                    <div class="mt-4 pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono-draft text-slate-400">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                            <span>Mess Kitchen Active • Hot meals guaranteed</span>
+                        </span>
+                        <button onclick="navigateTo('mess')" class="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1">
+                            <span>View Full Week Menu</span> <span>➔</span>
+                        </button>
+                    </div>
+                </div>
+            `
+        },
+        pass: {
+            id: 'pass',
+            icon: '🎫',
+            title: "Outing Requests & Curfew",
+            subtitle: `Curfew: ${curfewTime} • Instant Pass`,
+            desc: "Record your destination, reason, and return time. Automated gate scan verification with instant SMS alerts to parents on record.",
+            navAction: "navigateTo('pass')",
+            navLabel: "Open Outpass Hub",
+            quickButtons: `
+                <button onclick="navigateTo('pass')" class="w-full py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
+                    <span>📋</span> <span>View My Pass History</span>
+                </button>
+            `,
+            contentHtml: `
+                <div class="sketch-card p-5 sm:p-6 flex flex-col justify-between h-full relative overflow-hidden backdrop-blur-2xl">
+                    <div>
+                        <!-- Header -->
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-lg">🚶</div>
+                                <div>
+                                    <h4 class="text-base sm:text-lg font-black text-white font-draft">Quick Outpass Dispatcher</h4>
+                                    <p class="text-xs text-amber-300/90 font-mono-draft">Curfew cutoff tonight: ${curfewTime} IST</p>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                                Curfew Aware
+                            </span>
+                        </div>
+
+                        <!-- Quick Form -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-mono-draft text-slate-400 mb-1">Destination</label>
+                                <input type="text" id="pinned-quick-dest" placeholder="e.g. Campus Library / Market"
+                                    class="w-full sketch-input px-3 py-2 text-xs font-bold bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-amber-400 outline-none" />
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-mono-draft text-slate-400 mb-1">Reason for Outing</label>
+                                <input type="text" id="pinned-quick-reason" placeholder="e.g. Study books / Grocery"
+                                    class="w-full sketch-input px-3 py-2 text-xs font-bold bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-amber-400 outline-none" />
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-mono-draft text-slate-400 mb-1">Expected Return</label>
+                                <input type="time" id="pinned-quick-time" value="20:00"
+                                    class="w-full sketch-input px-3 py-2 text-xs font-bold bg-white/5 border border-white/10 rounded-lg text-white focus:border-amber-400 outline-none" />
+                            </div>
+                        </div>
+
+                        <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+                            <p class="text-[11px] text-slate-400 font-hand font-bold">
+                                💡 Gate security automatically clears day-slips submitted before curfew.
+                            </p>
+                            <button onclick="handleQuickPinnedOutpass()" class="px-5 py-2 rounded-xl text-xs font-black text-slate-900 sketch-btn shadow-md flex items-center gap-1.5 transition-all" style="background-color: var(--accent);">
+                                <span>🚀 Submit Quick Outpass</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Outing Info -->
+                    <div class="mt-4 pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono-draft text-slate-400">
+                        <span>🛡️ Warden Approval required only for outings exceeding 24 hours.</span>
+                        <button onclick="navigateTo('pass')" class="text-amber-400 hover:text-amber-300 font-bold">Open Full Outpass Desk ➔</button>
+                    </div>
+                </div>
+            `
+        },
+        repairs: {
+            id: 'repairs',
+            icon: '🔧',
+            title: "Fix Something in Room",
+            subtitle: "Electrician & Plumber SLA: 4 hrs",
+            desc: "Fan not rotating, bathroom tap leaking, or hostel WiFi down? 1-click alert is routed directly to floor technicians and verified by hostel office.",
+            navAction: "navigateTo('repairs')",
+            navLabel: "Open Maintenance Desk",
+            quickButtons: `
+                <button onclick="openModal('ticket')" class="w-full py-2 px-3 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/30 text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
+                    <span>➕</span> <span>Custom Repair Ticket</span>
+                </button>
+            `,
+            contentHtml: `
+                <div class="sketch-card p-5 sm:p-6 flex flex-col justify-between h-full relative overflow-hidden backdrop-blur-2xl">
+                    <div>
+                        <!-- Header -->
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-lg">⚡</div>
+                                <div>
+                                    <h4 class="text-base sm:text-lg font-black text-white font-draft">1-Click Fast Room Repair Launcher</h4>
+                                    <p class="text-xs text-slate-400 font-mono-draft">Tap an issue icon below to dispatch technician to your room immediately</p>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                                4-Hour SLA
+                            </span>
+                        </div>
+
+                        <!-- 4 Fast Repair Buttons -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <button onclick="quickReportFix('Electrical', 'Ceiling Fan or Tube Light not functioning')"
+                                class="sketch-box p-3.5 flex flex-col items-center text-center bg-white/[0.03] hover:bg-blue-500/10 hover:border-blue-400/40 rounded-xl border border-white/10 transition-all group">
+                                <span class="text-2xl mb-1.5 group-hover:scale-125 transition-transform">💡</span>
+                                <span class="text-xs font-black text-white">Fan / Light</span>
+                                <span class="text-[10px] text-slate-400 mt-0.5">Electrician</span>
+                            </button>
+
+                            <button onclick="quickReportFix('Plumbing', 'Water tap, flush or geyser issue')"
+                                class="sketch-box p-3.5 flex flex-col items-center text-center bg-white/[0.03] hover:bg-cyan-500/10 hover:border-cyan-400/40 rounded-xl border border-white/10 transition-all group">
+                                <span class="text-2xl mb-1.5 group-hover:scale-125 transition-transform">🚰</span>
+                                <span class="text-xs font-black text-white">Tap / Leakage</span>
+                                <span class="text-[10px] text-slate-400 mt-0.5">Plumber</span>
+                            </button>
+
+                            <button onclick="quickReportFix('Network', 'Hostel room WiFi or LAN ethernet port failure')"
+                                class="sketch-box p-3.5 flex flex-col items-center text-center bg-white/[0.03] hover:bg-emerald-500/10 hover:border-emerald-400/40 rounded-xl border border-white/10 transition-all group">
+                                <span class="text-2xl mb-1.5 group-hover:scale-125 transition-transform">📶</span>
+                                <span class="text-xs font-black text-white">WiFi / LAN</span>
+                                <span class="text-[10px] text-slate-400 mt-0.5">IT Support</span>
+                            </button>
+
+                            <button onclick="quickReportFix('Carpentry', 'Study table drawer, chair or bed frame repair')"
+                                class="sketch-box p-3.5 flex flex-col items-center text-center bg-white/[0.03] hover:bg-amber-500/10 hover:border-amber-400/40 rounded-xl border border-white/10 transition-all group">
+                                <span class="text-2xl mb-1.5 group-hover:scale-125 transition-transform">🪑</span>
+                                <span class="text-xs font-black text-white">Furniture</span>
+                                <span class="text-[10px] text-slate-400 mt-0.5">Carpenter</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Info -->
+                    <div class="mt-4 pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono-draft text-slate-400">
+                        <span>🛠️ Duty technicians available 9:00 AM – 7:00 PM. Emergency repair on-call 24/7.</span>
+                        <button onclick="navigateTo('repairs')" class="text-blue-400 hover:text-blue-300 font-bold">View Open Tickets ➔</button>
+                    </div>
+                </div>
+            `
+        },
+        packages: {
+            id: 'packages',
+            icon: '📦',
+            title: "Parcels & Laundry",
+            subtitle: "Security Gate & Washing Hub",
+            desc: "Collect deliveries from Amazon, Flipkart and courier services safely. Monitor washing machine availability in real time so you never wait in line.",
+            navAction: "navigateTo('packages')",
+            navLabel: "Open Parcels & Hub",
+            quickButtons: `
+                <button onclick="showAlert('🧺 Laundry Slot Reserved for 30 minutes!', 'success')" class="w-full py-2 px-3 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
+                    <span>🧺</span> <span>Quick Reserve Washer</span>
+                </button>
+            `,
+            contentHtml: `
+                <div class="sketch-card p-5 sm:p-6 flex flex-col justify-between h-full relative overflow-hidden backdrop-blur-2xl">
+                    <div>
+                        <!-- Header -->
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-lg">📦</div>
+                                <div>
+                                    <h4 class="text-base sm:text-lg font-black text-white font-draft">Live Deliveries & Laundry Live Hub</h4>
+                                    <p class="text-xs text-slate-400 font-mono-draft">Automated gate counter & washer availability status</p>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                                1 Parcel Arrived
+                            </span>
+                        </div>
+
+                        <!-- 2 Status Cards -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <!-- Gate Delivery Card -->
+                            <div class="sketch-box p-4 bg-white/[0.03] rounded-xl border border-white/10 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-xs font-black text-purple-300 font-mono-draft uppercase">Amazon Logistics</span>
+                                        <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">Ready</span>
+                                    </div>
+                                    <p class="text-xs text-slate-200 font-bold mb-1">Package waiting at Main Security Gate 1</p>
+                                    <p class="text-[11px] text-slate-400 font-mono-draft">Pickup OTP for Guard:</p>
+                                    <div class="mt-2 flex items-center gap-2">
+                                        <span class="text-lg font-mono font-black text-amber-300 tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-lg">8 4 9 2</span>
+                                        <button onclick="navigator.clipboard?.writeText('8492'); showAlert('OTP copied to clipboard!', 'info')" class="text-xs text-slate-400 hover:text-white px-2 py-1 bg-white/5 rounded border border-white/10">Copy</button>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-3 font-mono-draft">Pickup time: Until 10:00 PM tonight</p>
+                            </div>
+
+                            <!-- Laundry Hub Card -->
+                            <div class="sketch-box p-4 bg-white/[0.03] rounded-xl border border-white/10 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-xs font-black text-cyan-300 font-mono-draft uppercase">Ground Floor Laundry</span>
+                                        <span class="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-bold">3 Free</span>
+                                    </div>
+                                    <p class="text-xs text-slate-200 font-bold mb-1">3 of 8 Commercial Washers available</p>
+                                    <p class="text-[11px] text-slate-400 font-mono-draft">Average wash cycle time: 28 mins</p>
+                                    <div class="mt-2.5 flex items-center gap-2">
+                                        <button onclick="showAlert('🧺 Washer #4 reserved for you for 30 minutes!', 'success')"
+                                            class="px-3 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition-all">
+                                            Reserve Washer #4
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-3 font-mono-draft">Drying lines available on 3rd floor terrace</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Info -->
+                    <div class="mt-4 pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono-draft text-slate-400">
+                        <span>📦 Unclaimed parcels transferred to Warden Office after 72 hours.</span>
+                        <span class="text-purple-400 font-bold">Gate Guard Ext: 104</span>
+                    </div>
+                </div>
+            `
+        },
+        emergency: {
+            id: 'emergency',
+            icon: '🆘',
+            title: "Emergency & Contacts",
+            subtitle: "24/7 Security & Ambulance",
+            desc: "Direct speed-dial hotlines for Campus Security Gate, University Ambulance, Medical Health Centre Clinic, and Senior Warden on duty.",
+            navAction: "navigateTo('emergency')",
+            navLabel: "Open Emergency Hub",
+            quickButtons: `
+                <a href="tel:108" class="w-full py-2 px-3 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-all text-center">
+                    <span>🚑</span> <span>Call Ambulance (108)</span>
+                </a>
+            `,
+            contentHtml: `
+                <div class="sketch-card p-5 sm:p-6 flex flex-col justify-between h-full relative overflow-hidden backdrop-blur-2xl">
+                    <div>
+                        <!-- Header -->
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-lg bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-lg">🚨</div>
+                                <div>
+                                    <h4 class="text-base sm:text-lg font-black text-rose-300 font-draft">Direct Emergency Hotline Directory</h4>
+                                    <p class="text-xs text-slate-400 font-mono-draft">Tap any contact below to instantly connect phone call</p>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
+                                24/7 Active
+                            </span>
+                        </div>
+
+                        <!-- 4 Emergency Speed-Dial Boxes -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            <a href="tel:9876543210" class="sketch-box p-3.5 bg-rose-950/20 hover:bg-rose-950/40 border border-rose-500/20 rounded-xl flex flex-col justify-between transition-all group">
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-black text-rose-300 font-mono-draft">SECURITY GATE</span>
+                                        <span class="text-base group-hover:scale-125 transition-transform">📞</span>
+                                    </div>
+                                    <p class="text-sm font-black text-white">+91 98765 43210</p>
+                                    <p class="text-[10px] text-slate-400 mt-1">Main Gate 1 & Night Patrol</p>
+                                </div>
+                            </a>
+
+                            <a href="tel:108" class="sketch-box p-3.5 bg-rose-950/20 hover:bg-rose-950/40 border border-rose-500/20 rounded-xl flex flex-col justify-between transition-all group">
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-black text-rose-300 font-mono-draft">AMBULANCE</span>
+                                        <span class="text-base group-hover:scale-125 transition-transform">🚑</span>
+                                    </div>
+                                    <p class="text-sm font-black text-white">108 / 080-234567</p>
+                                    <p class="text-[10px] text-slate-400 mt-1">Campus Emergency Vehicle</p>
+                                </div>
+                            </a>
+
+                            <a href="tel:9876543212" class="sketch-box p-3.5 bg-emerald-950/20 hover:bg-emerald-950/40 border border-emerald-500/20 rounded-xl flex flex-col justify-between transition-all group">
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-black text-emerald-300 font-mono-draft">HEALTH CLINIC</span>
+                                        <span class="text-base group-hover:scale-125 transition-transform">🩺</span>
+                                    </div>
+                                    <p class="text-sm font-black text-white">+91 98765 43212</p>
+                                    <p class="text-[10px] text-slate-400 mt-1">Resident Doctor & Nurse</p>
+                                </div>
+                            </a>
+
+                            <a href="tel:9444412345" class="sketch-box p-3.5 bg-blue-950/20 hover:bg-blue-950/40 border border-blue-500/20 rounded-xl flex flex-col justify-between transition-all group">
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-black text-blue-300 font-mono-draft">CHIEF WARDEN</span>
+                                        <span class="text-base group-hover:scale-125 transition-transform">🛡️</span>
+                                    </div>
+                                    <p class="text-sm font-black text-white">+91 94444 12345</p>
+                                    <p class="text-[10px] text-slate-400 mt-1">Warden Executive Office</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Info -->
+                    <div class="mt-4 pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono-draft text-slate-400">
+                        <span>🚨 For severe medical emergencies, security gate will escort ambulance directly to block entrance.</span>
+                        <button onclick="navigateTo('emergency')" class="text-rose-400 hover:text-rose-300 font-bold">More Emergency Protocols ➔</button>
+                    </div>
+                </div>
+            `
+        },
+        rules: {
+            id: 'rules',
+            icon: '📜',
+            title: "Hostel Rules & FAQs",
+            subtitle: "Code of Conduct & Timings",
+            desc: "Curfew rules, study hours, electrical appliance permissions, visitor entry and room inspection policies clearly specified for all residents.",
+            navAction: "navigateTo('rules')",
+            navLabel: "Read Complete Rulebook",
+            quickButtons: `
+                <button onclick="navigateTo('rules')" class="w-full py-2 px-3 rounded-xl bg-slate-500/15 hover:bg-slate-500/25 text-slate-300 border border-slate-500/30 text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
+                    <span>📖</span> <span>Search Rules & FAQs</span>
+                </button>
+            `,
+            contentHtml: `
+                <div class="sketch-card p-5 sm:p-6 flex flex-col justify-between h-full relative overflow-hidden backdrop-blur-2xl">
+                    <div>
+                        <!-- Header -->
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-lg bg-slate-500/20 border border-slate-500/30 flex items-center justify-center text-lg">📜</div>
+                                <div>
+                                    <h4 class="text-base sm:text-lg font-black text-white font-draft">Key Hostel Rules & Code of Conduct</h4>
+                                    <p class="text-xs text-slate-400 font-mono-draft">Essential standards expected from all CampusHaven residents</p>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-500/20 text-slate-300 border border-slate-500/40">
+                                Official Handbook
+                            </span>
+                        </div>
+
+                        <!-- 2 Rules Columns -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <!-- Permitted / Do's -->
+                            <div class="sketch-box p-4 bg-emerald-950/10 border border-emerald-500/20 rounded-xl">
+                                <h5 class="text-xs font-black text-emerald-300 mb-2 flex items-center gap-1.5 uppercase font-mono-draft">
+                                    <span>✅</span> <span>Permitted & Encouraged</span>
+                                </h5>
+                                <ul class="text-xs text-slate-200 space-y-1.5 font-bold">
+                                    <li class="flex items-start gap-1.5"><span class="text-emerald-400">•</span><span>Electric kettle (up to 1000W) and study laptops allowed in rooms.</span></li>
+                                    <li class="flex items-start gap-1.5"><span class="text-emerald-400">•</span><span>Day guests permitted in ground floor reception lounge till 7:00 PM.</span></li>
+                                    <li class="flex items-start gap-1.5"><span class="text-emerald-400">•</span><span>Quiet study hours observed strictly from 10:00 PM to 6:00 AM daily.</span></li>
+                                </ul>
+                            </div>
+
+                            <!-- Prohibited / Don'ts -->
+                            <div class="sketch-box p-4 bg-rose-950/10 border border-rose-500/20 rounded-xl">
+                                <h5 class="text-xs font-black text-rose-300 mb-2 flex items-center gap-1.5 uppercase font-mono-draft">
+                                    <span>❌</span> <span>Strictly Prohibited</span>
+                                </h5>
+                                <ul class="text-xs text-slate-200 space-y-1.5 font-bold">
+                                    <li class="flex items-start gap-1.5"><span class="text-rose-400">•</span><span>Induction stoves, room heaters, or high-draw appliances strictly banned.</span></li>
+                                    <li class="flex items-start gap-1.5"><span class="text-rose-400">•</span><span>Unauthorized overnight guests or unregistered room swaps are not allowed.</span></li>
+                                    <li class="flex items-start gap-1.5"><span class="text-rose-400">•</span><span>Late entry after curfew (${curfewTime}) without prior warden slip logged.</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Info -->
+                    <div class="mt-4 pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono-draft text-slate-400">
+                        <span>⚖️ Disciplinary inquiries handled by the Proctorial Board & Chief Warden Office.</span>
+                        <button onclick="navigateTo('rules')" class="text-amber-400 hover:text-amber-300 font-bold">View Full FAQs & Handbook ➔</button>
+                    </div>
+                </div>
+            `
+        }
+    };
+
+    let html = '';
+    pinned.forEach((serviceId, index) => {
+        const s = serviceDefinitions[serviceId];
+        if (!s) return;
+
+        // ALTERNATING PATTERN:
+        // Index 0, 2, ... (Even) => Left: Service Card, Right: Full Content (lg:flex-row)
+        // Index 1, 3, ... (Odd)  => Left: Full Content, Right: Service Card (lg:flex-row-reverse)
+        const isEven = index % 2 === 0;
+        const flexPatternClass = isEven ? 'lg:flex-row' : 'lg:flex-row-reverse';
+
+        const cardSideHtml = `
+            <div class="w-full lg:w-4/12 xl:w-1/3 flex-shrink-0 flex flex-col">
+                <div class="sketch-card p-5 sm:p-6 flex flex-col justify-between h-full relative overflow-hidden group">
+                    <!-- Accent top glow -->
+                    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-300 opacity-80"></div>
+                    <div>
+                        <!-- Header with Pinned status & Unpin button -->
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
+                                <span>📌</span> <span>Pinned to Top</span>
+                            </span>
+                            <button type="button" onclick="togglePinService('${s.id}')" title="Unpin this service from top"
+                                class="text-xs font-bold text-slate-400 hover:text-white px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors flex items-center gap-1">
+                                <span>✕</span> <span>Unpin</span>
+                            </button>
+                        </div>
+
+                        <!-- Service Icon & Title -->
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                                ${s.icon}
+                            </div>
+                            <div>
+                                <h3 class="text-lg sm:text-xl font-black text-white font-draft">${s.title}</h3>
+                                <p class="text-xs text-amber-300/90 font-mono-draft">${s.subtitle}</p>
+                            </div>
+                        </div>
+
+                        <p class="text-xs text-slate-300 mt-2 font-hand font-bold leading-relaxed">${s.desc}</p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="mt-6 pt-4 border-t border-white/10 flex flex-col gap-2">
+                        ${s.quickButtons || ''}
+                        <button onclick="${s.navAction}"
+                            class="w-full py-2.5 px-3 rounded-xl sketch-btn text-xs font-bold text-slate-900 flex items-center justify-center gap-2 group-hover:shadow-[0_0_15px_rgba(245,158,11,0.3)] transition-all"
+                            style="background-color: var(--accent);">
+                            <span>${s.navLabel}</span>
+                            <span class="group-hover:translate-x-1 transition-transform">➔</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const contentSideHtml = `
+            <div class="w-full lg:w-8/12 xl:w-2/3 flex-1 flex flex-col">
+                ${s.contentHtml}
+            </div>
+        `;
+
+        html += `
+            <div class="pinned-service-row flex flex-col ${flexPatternClass} gap-6 items-stretch">
+                ${cardSideHtml}
+                ${contentSideHtml}
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function quickReportFix(category, issue) {
+    const user = getAuthUser();
+    if (!user) {
+        showAlert('Please sign in to lodge maintenance tickets.', 'warning');
+        navigateTo('login');
+        return;
+    }
+    showAlert(`🔧 Repair ticket logged for ${category}: "${issue}". Technician dispatched!`, 'success');
+}
+
+async function handleQuickPinnedOutpass() {
+    const user = getAuthUser();
+    if (!user) {
+        showAlert('Please sign in to submit outing requests.', 'warning');
+        navigateTo('login');
+        return;
+    }
+    const dest = document.getElementById('pinned-quick-dest')?.value.trim();
+    const reason = document.getElementById('pinned-quick-reason')?.value.trim();
+    const returnTime = document.getElementById('pinned-quick-time')?.value || '20:00';
+    if (!dest || !reason) {
+        showAlert('Please provide destination and reason for outing.', 'warning');
+        return;
+    }
+
+    const todayDate = getLocalDateKey();
+    const leaveTime = new Intl.DateTimeFormat('en-GB', {
+        timeZone: APP_TIME_ZONE,
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23'
+    }).format(new Date());
+
+    try {
+        const token = localStorage.getItem('campushaven_token');
+        if (token && backendIsAvailable()) {
+            const response = await fetch(`${API_BASE_URL}/outpasses`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    destination: dest,
+                    reason,
+                    leaveDate: todayDate,
+                    leaveTime,
+                    returnDate: todayDate,
+                    returnTime
+                })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message || 'Outpass submission failed.');
+            showAlert(result.message || 'Quick outpass approved! Safe travels.', 'success');
+        } else {
+            const outings = readLocalOutpasses();
+            outings.push({
+                id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                contact: user.contact || user.email || 'student',
+                residentName: user.name || 'Resident',
+                roomNumber: user.roomNumber || 'Room 101',
+                floor: user.floor || '1st',
+                gender: user.gender === 'girls' ? 'girls' : 'boys',
+                destination: dest,
+                reason,
+                leaveDate: todayDate,
+                leaveTime,
+                returnDate: todayDate,
+                returnTime,
+                status: 'Approved',
+                type: 'Day Outing',
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('campushaven_outpasses', JSON.stringify(outings));
+            showAlert(`🚀 Quick outpass for "${dest}" registered successfully! Safe travels.`, 'success');
+        }
+        const dInput = document.getElementById('pinned-quick-dest');
+        const rInput = document.getElementById('pinned-quick-reason');
+        if (dInput) dInput.value = '';
+        if (rInput) rInput.value = '';
+    } catch (err) {
+        showAlert(err.message || 'Outpass registration error.', 'warning');
+    }
 }
 
 function toggleMobileMenu() {
@@ -504,6 +1288,10 @@ function navigateTo(viewName) {
     }
     if (viewName === 'admin' && user?.role === 'admin') {
         loadWardenAccounts();
+    }
+    if (viewName === 'home') {
+        renderPinnedServices();
+        updatePinButtons();
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -923,6 +1711,8 @@ function handleLogout() {
     localStorage.removeItem('campushaven_user');
     localStorage.removeItem('campushaven_token');
     showAlert('Signed out successfully.', 'info');
+    renderPinnedServices();
+    updatePinButtons();
     navigateTo('login');
 }
 
@@ -1272,6 +2062,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     loadDateMenu();
     loadCalendarDocument();
+    renderPinnedServices();
+    updatePinButtons();
     window.setInterval(() => updateMealStatuses(), 60 * 1000);
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) updateMealStatuses();

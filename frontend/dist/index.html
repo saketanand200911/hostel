@@ -176,105 +176,154 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                <div onclick="navigateTo('pass')"
-                    class="sketch-card p-6 bg-amber-50/50 hover:bg-amber-100/70 cursor-pointer flex flex-col justify-between group">
+            <!-- PINNED SERVICES (Alternating Left/Right Pattern) -->
+            <div id="pinned-services-container" class="space-y-6"></div>
+
+            <!-- ALL HOSTEL SERVICES GRID -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between px-1">
                     <div>
-                        <div
-                            class="w-12 h-12 rounded-xl bg-amber-200 border-2 border-[var(--sketch-border)] flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
-                            🎫</div>
-                        <h3 class="text-lg font-black text-[var(--ink)] font-draft">Outing Requests & Curfew</h3>
-                        <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">Record your destination, reason, and return time. Late or longer-than-24-hour outings require staff approval.</p>
-                    </div>
-                    <div
-                        class="mt-4 pt-3 border-t border-[var(--sketch-border)] flex items-center justify-between text-xs font-bold text-amber-800">
-                        <span>Submit outing details</span>
-                        <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
+                        <h2 class="text-xl font-black font-draft text-[var(--ink)]">All Services & Hubs</h2>
+                        <p class="text-xs text-slate-400">Click 📌 on any service to pin it to your dashboard top</p>
                     </div>
                 </div>
 
-                <div onclick="navigateTo('mess')"
-                    class="sketch-card p-6 bg-emerald-50/50 hover:bg-emerald-100/70 cursor-pointer flex flex-col justify-between group">
-                    <div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <div onclick="navigateTo('pass')"
+                        class="sketch-card p-6 bg-amber-50/50 hover:bg-amber-100/70 cursor-pointer flex flex-col justify-between group">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-amber-200 border-2 border-[var(--sketch-border)] flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                                    🎫</div>
+                                <button type="button" onclick="event.stopPropagation(); togglePinService('pass')" id="pin-btn-pass"
+                                    class="pin-toggle-btn px-2.5 py-1 rounded-full text-xs font-bold border transition-all flex items-center gap-1 shadow-sm">
+                                    <span>📍</span> <span>Pin</span>
+                                </button>
+                            </div>
+                            <h3 class="text-lg font-black text-[var(--ink)] font-draft">Outing Requests & Curfew</h3>
+                            <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">Record your destination, reason, and return time. Late or longer-than-24-hour outings require staff approval.</p>
+                        </div>
                         <div
-                            class="w-12 h-12 rounded-xl bg-emerald-200 border-2 border-[var(--sketch-border)] flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
-                            🍽️</div>
-                        <h3 class="text-lg font-black text-[var(--ink)] font-draft">Today's Mess Menu</h3>
-                        <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">See what's cooking for
-                            Breakfast, Lunch & Dinner. Vote on Sunday specials!</p>
+                            class="mt-4 pt-3 border-t border-[var(--sketch-border)] flex items-center justify-between text-xs font-bold text-amber-800">
+                            <span>Submit outing details</span>
+                            <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
+                        </div>
                     </div>
-                    <div
-                        class="mt-4 pt-3 border-t border-[var(--sketch-border)] flex items-center justify-between text-xs font-bold text-emerald-800">
-                        <span>Check Food Menu</span>
-                        <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
-                    </div>
-                </div>
 
-                <div onclick="navigateTo('repairs')" id="home-repairs-card"
-                    class="sketch-card p-6 bg-blue-50/50 hover:bg-blue-100/70 cursor-pointer flex flex-col justify-between group">
-                    <div>
+                    <div onclick="navigateTo('mess')"
+                        class="sketch-card p-6 bg-emerald-50/50 hover:bg-emerald-100/70 cursor-pointer flex flex-col justify-between group">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-emerald-200 border-2 border-[var(--sketch-border)] flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                                    🍽️</div>
+                                <button type="button" onclick="event.stopPropagation(); togglePinService('mess')" id="pin-btn-mess"
+                                    class="pin-toggle-btn px-2.5 py-1 rounded-full text-xs font-bold border transition-all flex items-center gap-1 shadow-sm">
+                                    <span>📍</span> <span>Pin</span>
+                                </button>
+                            </div>
+                            <h3 class="text-lg font-black text-[var(--ink)] font-draft">Today's Mess Menu</h3>
+                            <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">See what's cooking for
+                                Breakfast, Lunch & Dinner. Vote on Sunday specials!</p>
+                        </div>
                         <div
-                            class="w-12 h-12 rounded-xl bg-blue-200 border-2 border-[var(--sketch-border)] flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
-                            🔧</div>
-                        <h3 class="text-lg font-black text-[var(--ink)] font-draft">Fix Something in Room</h3>
-                        <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">Fan not working? Tap leaking?
-                            WiFi down? 1-click alert sent to electrician & plumber.</p>
+                            class="mt-4 pt-3 border-t border-[var(--sketch-border)] flex items-center justify-between text-xs font-bold text-emerald-800">
+                            <span>Check Food Menu</span>
+                            <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
+                        </div>
                     </div>
-                    <div
-                        class="mt-4 pt-3 border-t border-[var(--sketch-border)] flex items-center justify-between text-xs font-bold text-blue-800">
-                        <span>Report Broken Item</span>
-                        <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
-                    </div>
-                </div>
 
-                <div onclick="navigateTo('packages')"
-                    class="sketch-card p-6 bg-purple-50/50 hover:bg-purple-100/70 cursor-pointer flex flex-col justify-between group">
-                    <div>
+                    <div onclick="navigateTo('repairs')" id="home-repairs-card"
+                        class="sketch-card p-6 bg-blue-50/50 hover:bg-blue-100/70 cursor-pointer flex flex-col justify-between group">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-blue-200 border-2 border-[var(--sketch-border)] flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                                    🔧</div>
+                                <button type="button" onclick="event.stopPropagation(); togglePinService('repairs')" id="pin-btn-repairs"
+                                    class="pin-toggle-btn px-2.5 py-1 rounded-full text-xs font-bold border transition-all flex items-center gap-1 shadow-sm">
+                                    <span>📍</span> <span>Pin</span>
+                                </button>
+                            </div>
+                            <h3 class="text-lg font-black text-[var(--ink)] font-draft">Fix Something in Room</h3>
+                            <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">Fan not working? Tap leaking?
+                                WiFi down? 1-click alert sent to electrician & plumber.</p>
+                        </div>
                         <div
-                            class="w-12 h-12 rounded-xl bg-purple-200 border-2 border-[var(--sketch-border)] flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
-                            📦</div>
-                        <h3 class="text-lg font-black text-[var(--ink)] font-draft">Parcels & Laundry</h3>
-                        <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">Check if your Amazon/Flipkart
-                            courier arrived, and see free washing machines.</p>
+                            class="mt-4 pt-3 border-t border-[var(--sketch-border)] flex items-center justify-between text-xs font-bold text-blue-800">
+                            <span>Report Broken Item</span>
+                            <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
+                        </div>
                     </div>
-                    <div
-                        class="mt-4 pt-3 border-t border-[var(--sketch-border)] flex items-center justify-between text-xs font-bold text-purple-800">
-                        <span>Track Deliveries</span>
-                        <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
-                    </div>
-                </div>
 
-                <div onclick="navigateTo('emergency')"
-                    class="sketch-card p-6 bg-rose-50/50 hover:bg-rose-100/70 cursor-pointer flex flex-col justify-between group border-rose-300">
-                    <div>
+                    <div onclick="navigateTo('packages')"
+                        class="sketch-card p-6 bg-purple-50/50 hover:bg-purple-100/70 cursor-pointer flex flex-col justify-between group">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-purple-200 border-2 border-[var(--sketch-border)] flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                                    📦</div>
+                                <button type="button" onclick="event.stopPropagation(); togglePinService('packages')" id="pin-btn-packages"
+                                    class="pin-toggle-btn px-2.5 py-1 rounded-full text-xs font-bold border transition-all flex items-center gap-1 shadow-sm">
+                                    <span>📍</span> <span>Pin</span>
+                                </button>
+                            </div>
+                            <h3 class="text-lg font-black text-[var(--ink)] font-draft">Parcels & Laundry</h3>
+                            <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">Check if your Amazon/Flipkart
+                                courier arrived, and see free washing machines.</p>
+                        </div>
                         <div
-                            class="w-12 h-12 rounded-xl bg-rose-200 border-2 border-rose-800 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
-                            🆘</div>
-                        <h3 class="text-lg font-black text-rose-900 font-draft">Emergency & Contacts</h3>
-                        <p class="text-xs text-rose-700 mt-1 font-hand font-bold text-sm">Direct phone numbers for Chief
-                            Warden, Security Gate, Clinic & Ambulance.</p>
+                            class="mt-4 pt-3 border-t border-[var(--sketch-border)] flex items-center justify-between text-xs font-bold text-purple-800">
+                            <span>Track Deliveries</span>
+                            <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
+                        </div>
                     </div>
-                    <div
-                        class="mt-4 pt-3 border-t border-rose-300 flex items-center justify-between text-xs font-bold text-rose-800">
-                        <span>Emergency Helpdesk</span>
-                        <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
-                    </div>
-                </div>
 
-                <div onclick="navigateTo('rules')"
-                    class="sketch-card p-6 bg-slate-50 hover:bg-slate-100 cursor-pointer flex flex-col justify-between group">
-                    <div>
+                    <div onclick="navigateTo('emergency')"
+                        class="sketch-card p-6 bg-rose-50/50 hover:bg-rose-100/70 cursor-pointer flex flex-col justify-between group border-rose-300">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-rose-200 border-2 border-rose-800 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                                    🆘</div>
+                                <button type="button" onclick="event.stopPropagation(); togglePinService('emergency')" id="pin-btn-emergency"
+                                    class="pin-toggle-btn px-2.5 py-1 rounded-full text-xs font-bold border transition-all flex items-center gap-1 shadow-sm">
+                                    <span>📍</span> <span>Pin</span>
+                                </button>
+                            </div>
+                            <h3 class="text-lg font-black text-rose-900 font-draft">Emergency & Contacts</h3>
+                            <p class="text-xs text-rose-700 mt-1 font-hand font-bold text-sm">Direct phone numbers for Chief
+                                Warden, Security Gate, Clinic & Ambulance.</p>
+                        </div>
                         <div
-                            class="w-12 h-12 rounded-xl bg-slate-200 border-2 border-[var(--sketch-border)] flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
-                            📜</div>
-                        <h3 class="text-lg font-black text-[var(--ink)] font-draft">Hostel Rules & FAQs</h3>
-                        <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">Curfew hours vary by wing, guest
-                            entry rules, quiet study hours explained simply.</p>
+                            class="mt-4 pt-3 border-t border-rose-300 flex items-center justify-between text-xs font-bold text-rose-800">
+                            <span>Emergency Helpdesk</span>
+                            <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
+                        </div>
                     </div>
-                    <div
-                        class="mt-4 pt-3 border-t border-[var(--sketch-border)] flex items-center justify-between text-xs font-bold text-slate-800">
-                        <span>Read Simple Rules</span>
-                        <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
+
+                    <div onclick="navigateTo('rules')"
+                        class="sketch-card p-6 bg-slate-50 hover:bg-slate-100 cursor-pointer flex flex-col justify-between group">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-slate-200 border-2 border-[var(--sketch-border)] flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                                    📜</div>
+                                <button type="button" onclick="event.stopPropagation(); togglePinService('rules')" id="pin-btn-rules"
+                                    class="pin-toggle-btn px-2.5 py-1 rounded-full text-xs font-bold border transition-all flex items-center gap-1 shadow-sm">
+                                    <span>📍</span> <span>Pin</span>
+                                </button>
+                            </div>
+                            <h3 class="text-lg font-black text-[var(--ink)] font-draft">Hostel Rules & FAQs</h3>
+                            <p class="text-xs text-slate-600 mt-1 font-hand font-bold text-sm">Curfew hours vary by wing, guest
+                                entry rules, quiet study hours explained simply.</p>
+                        </div>
+                        <div
+                            class="mt-4 pt-3 border-t border-[var(--sketch-border)] flex items-center justify-between text-xs font-bold text-slate-800">
+                            <span>Read Simple Rules</span>
+                            <span class="text-base group-hover:translate-x-1 transition-transform">➔</span>
+                        </div>
                     </div>
                 </div>
             </div>
