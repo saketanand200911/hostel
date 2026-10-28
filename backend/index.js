@@ -1,4 +1,8 @@
-require('dotenv').config();
+try {
+  require('dotenv').config();
+} catch {
+  // Vercel injects production environment variables directly.
+}
 
 const express = require('express');
 const cors = require('cors');
